@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 
 class AbstractRepository(ABC):
     @abstractmethod
-    def add(self, table_entry):
+    def add_trade(self, trade):
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, table, id):
+    def get_trade(self, id):
         raise NotImplementedError

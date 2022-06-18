@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 class TradeStatus:
@@ -7,9 +7,9 @@ class TradeStatus:
     LOST = 'lost'
 
 
-@dataclass(kw_only=True, slots=True, order=True)
-class trade:
-    id: int
+@dataclass(kw_only=True)
+class Trade:
+    id: int = field(init=False, compare=False)
     symbol: str
     fiat_symbol: str
     timeframe: str
