@@ -15,7 +15,9 @@ def create_trade(symbol="BTC", fiat_symbol="EUR", timeframe='5m',
                  percentage_change_1d_on_entry='2',
                  percentage_change_7d_on_entry='2',
                  percentage_change_1h_on_entry='2', strategy_name='test',
-                 is_real=False):
+                 is_real=False, fiat_result_no_fees=None,
+                 crypto_quantity_exit=None, exit_fee_fiat=None, exit_date=None,
+                 oco_stop_exchange_id=None, oco_limit_exchange_id=None):
 
     return model.Trade(symbol=symbol, fiat_symbol=fiat_symbol, timeframe=timeframe,
                        stop_loss=stop_loss, entry_price=entry_price, take_profit=take_profit,
@@ -27,7 +29,11 @@ def create_trade(symbol="BTC", fiat_symbol="EUR", timeframe='5m',
                        percentage_change_1d_on_entry=percentage_change_1d_on_entry,
                        percentage_change_7d_on_entry=percentage_change_7d_on_entry,
                        percentage_change_1h_on_entry=percentage_change_1h_on_entry, strategy_name=strategy_name,
-                       is_real=is_real)
+                       is_real=is_real, fiat_result_no_fees=fiat_result_no_fees,
+                       crypto_quantity_exit=crypto_quantity_exit,
+                       exit_fee_fiat=exit_fee_fiat, exit_date=exit_date,
+                       oco_stop_exchange_id=oco_stop_exchange_id,
+                       oco_limit_exchange_id=oco_limit_exchange_id)
 
 @pytest.fixture
 def generic_trade_defaults():
