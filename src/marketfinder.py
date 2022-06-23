@@ -56,25 +56,19 @@ class CoinGeckoMarketFinder(MarketFinder):
         self.pairs_for_exchange = []
         self.seconds_to_wait_on_http_error = 3
 
-    def _get_top_markets_unhandled(self, vs_currency, force=True):
+    def get_top_markets(self, vs_currency, force=False):
         if len(self._top_markets) == 0 or force:
-            markets = self.api.get_coins_markets(vs_currency)
+            markets_fetched = False
+            while not markets_fetched:
+                try:
+                    markets = self.api.get_coins_markets(vs_currency)
+                    self._top_markets.clear()
+                    self._top_markets = markets
+                    markets_fetched = True
+                except requests.exceptions.HTTPError:
+                    sleep(self.seconds_to_wait_on_http_error)
         else:
             markets = self._top_markets
-
-        self._top_markets = markets
-        return markets
-
-    def get_top_markets(self, vs_currency, force=True):
-        markets_fetched = False
-
-        while not markets_fetched:
-            try:
-                markets = self._get_top_markets_unhandled(vs_currency,
-                                                          force=force)
-                markets_fetched = True
-            except requests.exceptions.HTTPError:
-                sleep(self.seconds_to_wait_on_http_error)
 
         return markets
 
@@ -149,19 +143,7 @@ class CoinGeckoMarketFinder(MarketFinder):
     def get_pairs_for_exchange_vs_currency(self, exchange_id, vs_currency):
         # TODO ejecutarla al instacnciar y guardar resultados en una variable de instancia
         # TODO EJECUTARLA CADA MES
-        tickers = []
-        page = 1
-
-        exchange_tickers = self._get_pairs_for_exchange_single_page(exchange_id,
-                                                                    page=page)
-
-        while len(exchange_tickers['tickers']) > 0:
-            page += 1
-            for ticker in exchange_tickers['tickers']:
-                tickers.append(ticker)
-
-            exchange_tickers = self._get_pairs_for_exchange_single_page(
-                exchange_id, page=page)
+        tickers = self.get_pairs_for_exchange(exchange_id)
 
         tickers = list(
             filter(lambda x: x['target'].upper() == vs_currency.upper(),
@@ -184,11 +166,8 @@ class CoinGeckoMarketFinder(MarketFinder):
     def provide_markets_to_trade(self, exchange_id, vs_currency):
         top_symbols = set(self.list_top_symbols(vs_currency))
 
-        if len(self.pairs_for_exchange_vs_currency) == 0:
-            symbols_in_exchange = self.get_pairs_for_exchange_vs_currency(
-                exchange_id, vs_currency)
-        else:
-            symbols_in_exchange = self.pairs_for_exchange_vs_currency
+        symbols_in_exchange = self.get_pairs_for_exchange_vs_currency(
+                                   exchange_id, vs_currency)
 
         symbols_in_exchange = set(
             map(
