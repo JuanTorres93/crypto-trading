@@ -39,7 +39,7 @@ class MarketFinder(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_pairs_for_exchange(self, exchange_id, vs_currency):
+    def _get_pairs_for_exchange_single_page(self, exchange_id, page: int = 1):
         raise NotImplementedError
 
     @abstractmethod
@@ -53,6 +53,7 @@ class CoinGeckoMarketFinder(MarketFinder):
         if not isinstance(api, CoinGeckoAPI):
             raise TypeError("api should be CoinGeckoAPI")
 
+        self.pairs_for_exchange = []
         self.seconds_to_wait_on_http_error = 3
 
     def _get_top_markets_unhandled(self, vs_currency, force=True):
@@ -109,7 +110,7 @@ class CoinGeckoMarketFinder(MarketFinder):
         symbol_info['symbol'] = symbol_info['symbol'].upper()
         return symbol_info
 
-    def get_pairs_for_exchange(self, exchange_id, page: int = 1):
+    def _get_pairs_for_exchange_single_page(self, exchange_id, page: int = 1):
         exchange_tickers_fetched = False
 
         while not exchange_tickers_fetched:
@@ -122,21 +123,45 @@ class CoinGeckoMarketFinder(MarketFinder):
 
         return exchange_tickers
 
+    def get_pairs_for_exchange(self, exchange_id, force=False):
+        if len(self.pairs_for_exchange) == 0 or force:
+            tickers = []
+            page = 1
+
+            exchange_tickers = self._get_pairs_for_exchange_single_page(exchange_id,
+                                                                        page=page)
+
+            while len(exchange_tickers['tickers']) > 0:
+                page += 1
+                for ticker in exchange_tickers['tickers']:
+                    tickers.append(ticker)
+
+                exchange_tickers = self._get_pairs_for_exchange_single_page(
+                    exchange_id, page=page)
+
+            self.pairs_for_exchange.clear()
+            self.pairs_for_exchange = tickers
+        else:
+            tickers = self.pairs_for_exchange
+
+        return tickers
+
     def get_pairs_for_exchange_vs_currency(self, exchange_id, vs_currency):
         # TODO ejecutarla al instacnciar y guardar resultados en una variable de instancia
         # TODO EJECUTARLA CADA MES
         tickers = []
         page = 1
 
-        exchange_tickers = self.get_pairs_for_exchange(exchange_id, page=page)
+        exchange_tickers = self._get_pairs_for_exchange_single_page(exchange_id,
+                                                                    page=page)
 
         while len(exchange_tickers['tickers']) > 0:
             page += 1
             for ticker in exchange_tickers['tickers']:
                 tickers.append(ticker)
 
-            exchange_tickers = self.get_pairs_for_exchange(exchange_id,
-                                                           page=page)
+            exchange_tickers = self._get_pairs_for_exchange_single_page(
+                exchange_id, page=page)
 
         tickers = list(
             filter(lambda x: x['target'].upper() == vs_currency.upper(),
@@ -235,5 +260,7 @@ class CoinGeckoMarketFinder(MarketFinder):
 
 if __name__ == '__main__':
     borrar = CoinGeckoMarketFinder(CoinGeckoAPI())
-    h = borrar.provide_markets_to_trade('binance', 'EUR')
+    h = borrar.get_pairs_for_exchange('binance')
+    h = borrar.get_pairs_for_exchange('binance')
+    # h = borrar.provide_markets_to_trade('binance', 'EUR')
     pass
