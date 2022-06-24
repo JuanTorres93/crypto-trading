@@ -53,14 +53,18 @@ def test_coingecko_gets_single_page_pairs_for_exchange():
 
 
 def test_coingecko_gets_pairs_for_exchange():
-    pairs_web = coingecko_marketfinder.get_pairs_for_exchange('binance')
+    pairs_web = coingecko_marketfinder._get_pairs_for_exchange('binance')
 
     assert type(pairs_web) is list
-    assert type(pairs_web[0]) is dict
+    for pair in pairs_web:
+        assert type(pair) is dict
+
     assert {'target', 'base'}.issubset(set(pairs_web[0].keys()))
 
-    pairs_instance_attr_1 = coingecko_marketfinder.get_pairs_for_exchange('binance')
-    pairs_instance_attr_2 = coingecko_marketfinder.get_pairs_for_exchange('binance', force=False)
+    pairs_instance_attr_1 = coingecko_marketfinder._get_pairs_for_exchange(
+        'binance')
+    pairs_instance_attr_2 = coingecko_marketfinder._get_pairs_for_exchange(
+        'binance', force=False)
 
     assert pairs_web == pairs_instance_attr_1 == pairs_instance_attr_2
 
@@ -69,9 +73,8 @@ def test_coingecko_gets_pairs_for_exchange_vs_currency():
     pairs = coingecko_marketfinder.get_pairs_for_exchange_vs_currency('binance', 'EUR')
 
     assert type(pairs) is list
-    assert type(pairs[0]) is dict
-
     for pair in pairs:
+        assert type(pair) is dict
         assert pair['target'] == 'EUR'
 
 
@@ -80,7 +83,8 @@ def test_coingecko_orders_markets_according_percentage_change():
     markets_to_trade = coingecko_marketfinder.provide_markets_to_trade('binance', 'EUR')
 
     assert type(markets_to_trade) is list
-    assert type(markets_to_trade[0]) is dict
+    for market in markets_to_trade:
+        assert type(market) is dict
 
     expected_keys = {'symbol', 'market_cap_rank', 'coingecko_rank',
                      'market_cap', 'high_24h', 'low_24h',
