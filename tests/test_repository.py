@@ -60,24 +60,22 @@ def test_sqlalchemy_updates_trade_on_exit_position(sqlalchemyrepository):
     sqlalchemyrepository.commit()
 
     status = model.TradeStatus.WON
-    fiat_result_no_fees = 10.4
+    vs_currency_result_no_fees = 10.4
     crypto_quantity_exit = 10.99
-    exit_fee_fiat = 22.009
+    exit_fee_vs_currency = 22.009
     exit_date = '2022-06-18 19:21:10'
 
     t_modified = create_trade(entry_date='2022-06-18 19:19:19', status=status,
-                              fiat_result_no_fees=fiat_result_no_fees,
+                              vs_currency_result_no_fees=vs_currency_result_no_fees,
                               crypto_quantity_exit=crypto_quantity_exit,
-                              exit_fee_fiat=exit_fee_fiat, exit_date=exit_date)
+                              exit_fee_vs_currency=exit_fee_vs_currency, exit_date=exit_date)
 
-    sqlalchemyrepository.update_trade_on_exit_position(
-        id=t.id,
-        status=status,
-        fiat_result_no_fees=fiat_result_no_fees,
-        crypto_quantity_exit=crypto_quantity_exit,
-        exit_fee_fiat=exit_fee_fiat,
-        exit_date=exit_date
-    )
+    sqlalchemyrepository.update_trade_on_exit_position(id=t.id,
+                                                       vs_currency_result_no_fees=vs_currency_result_no_fees,
+                                                       status=status,
+                                                       crypto_quantity_exit=crypto_quantity_exit,
+                                                       exit_fee_vs_currency=exit_fee_vs_currency,
+                                                       exit_date=exit_date)
 
     assert t_modified == sqlalchemyrepository.get_trade(t.id)
 

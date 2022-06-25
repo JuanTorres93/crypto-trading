@@ -25,9 +25,9 @@ class AbstractRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def update_trade_on_exit_position(self, id, fiat_result_no_fees, status,
-                                      crypto_quantity_exit, exit_fee_fiat,
-                                      exit_date):
+    def update_trade_on_exit_position(self, id, vs_currency_result_no_fees,
+                                      status, crypto_quantity_exit,
+                                      exit_fee_vs_currency, exit_date):
         raise NotImplementedError
 
 
@@ -48,13 +48,13 @@ class SqlAlchemyRepository(AbstractRepository):
         trade.oco_limit_exchange_id = oco_limit_exchange_id
         self.commit()
 
-    def update_trade_on_exit_position(self, id, fiat_result_no_fees, status,
-                                      crypto_quantity_exit, exit_fee_fiat,
-                                      exit_date):
+    def update_trade_on_exit_position(self, id, vs_currency_result_no_fees,
+                                      status, crypto_quantity_exit,
+                                      exit_fee_vs_currency, exit_date):
         trade = self.get_trade(id)
-        trade.fiat_result_no_fees = fiat_result_no_fees
+        trade.vs_currency_result_no_fees = vs_currency_result_no_fees
         trade.status = status
         trade.crypto_quantity_exit = crypto_quantity_exit
-        trade.exit_fee_fiat = exit_fee_fiat
+        trade.exit_fee_vs_currency = exit_fee_vs_currency
         trade.exit_date = exit_date
         self.commit()
