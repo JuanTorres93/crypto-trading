@@ -2,6 +2,8 @@ classDiagram
   MarketFinder <|.. CoinGeckoMarketFinder
   Trade *-- TradeStatus
   AbstracRepository <|.. SqlAlchemyRepository
+  ExchangeHandler <|.. CcxtExchangeHandler
+  CcxtExchangeHandler <|.. BinanceCcxtExchangeHandler
   class MarketFinder{
     <<Interface>>
     -_api
@@ -71,5 +73,22 @@ classDiagram
   }
 
   class SqlAlchemyRepository{
+
+  }
+
+  class ExchangeHandler{
+    <<Interface>>
+    -_exchange_api
+    +__init_(exchange_api)
+    +buy_market_order()
+    +sell_market_order()
+    +get_candles(symbol, vs_currency, timeframe, num_candles, since)
+    +get_fees()
+  }
+
+  class CcxtExchangeHandler{
+
+  }
+  class BinanceCcxtExchangeHandler{
 
   }
