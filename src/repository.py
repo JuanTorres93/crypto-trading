@@ -5,7 +5,7 @@ import model
 
 class AbstractRepository(ABC):
     def __init__(self, session):
-        self.session = session
+        self._session = session
 
     @abstractmethod
     def add_trade(self, trade):
@@ -33,13 +33,13 @@ class AbstractRepository(ABC):
 
 class SqlAlchemyRepository(AbstractRepository):
     def add_trade(self, trade):
-        self.session.add(trade)
+        self._session.add(trade)
 
     def get_trade(self, id):
-        return self.session.query(model.Trade).filter_by(id=id).one()
+        return self._session.query(model.Trade).filter_by(id=id).one()
 
     def commit(self):
-        self.session.commit()
+        self._session.commit()
 
     def update_trade_on_oco_order_creation(self, id, oco_stop_exchange_id,
                                            oco_limit_exchange_id):

@@ -1,0 +1,75 @@
+classDiagram
+  MarketFinder <|.. CoinGeckoMarketFinder
+  Trade *-- TradeStatus
+  AbstracRepository <|.. SqlAlchemyRepository
+  class MarketFinder{
+    <<Interface>>
+    -_api
+    -_top_markets
+    -_markets_to_trade
+    +pairs_for_exchange_vs_currency
+    +__init__(api)
+    +get_top_markets(vs_currency, force=True) list~dict~
+    +get_pairs_for_exchange_vs_currency(exchange_id, vs_currency, force=False)
+    +list_top_symbols(vs_currency) list
+    +provide_markets_to_trade(exchange_id, vs_currency) list~dict~
+  }
+
+  class CoinGeckoMarketFinder{
+    -_pairs_for_exchange
+    -_seconds_to_wait_on_http_error
+    -_get_symbol_info(symbol, vs_currency) dict
+    -_get_pairs_for_exchange_single_page(exchange_id, page=1)
+    -_get_pairs_for_exchange(self, exchange_id, force=False)
+  }
+
+  class Trade{
+    +id: int
+    +symbol: str
+    +vs_currency_symbol: str
+    +timeframe: str
+    +stop_loss: float
+    +entry_price: float
+    +take_profit: float
+    +status: str
+    +vs_currency_entry: float
+    +crypto_quantity_entry: float
+    +entry_fee_vs_currency: float
+    +position: str
+    +entry_date: str
+    +entry_order_exchange_id: str
+    +percentage_change_1h_on_entry: str
+    +percentage_change_1d_on_entry: str
+    +percentage_change_7d_on_entry: str
+    +strategy_name: str
+    +is_real: bool
+    +oco_stop_exchange_id: str = None
+    +oco_limit_exchange_id: str = None
+    +vs_currency_result_no_fees: float = None
+    +modified_stop_loss: float = None
+    +modified_take_profit: float = None
+    +crypto_quantity_exit: float = None
+    +exit_fee_vs_currency: float = None
+    +exit_date: str = None
+  }
+
+  class TradeStatus{
+    +OPENED: str
+    +WON: str
+    +LOST: str
+  }
+
+  class AbstracRepository{
+    <<Interface>>
+    -_session
+    +__init__(session)
+    +add_trade(trade)
+    +get_trade(id)
+    +commit()
+    +update_trade_on_oco_order_creation(id, oco_stop_exchange_id, oco_limit_exchange_id)
+    +update_trade_on_exit_position(id, vs_currency_result_no_fees, status, crypto_quantity_exit, exit_fee_vs_currency, exit_date)
+  }
+
+  class SqlAlchemyRepository{
+
+  }

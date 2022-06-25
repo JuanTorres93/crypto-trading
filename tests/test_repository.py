@@ -16,7 +16,7 @@ def test_sqlalchemy_repository_saves_trade(sqlalchemyrepository):
     sqlalchemyrepository.add_trade(t)
     sqlalchemyrepository.commit()
 
-    expected_trade = sqlalchemyrepository.session.query(
+    expected_trade = sqlalchemyrepository._session.query(
         model.Trade
     ).filter_by(id=t.id).one()
 
