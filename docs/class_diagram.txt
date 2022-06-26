@@ -81,7 +81,7 @@ classDiagram
     -_exchange_api
     +__init_(exchange_api)
     +buy_market_order(symbol, vs_currency, amount)
-    +sell_market_order()
+    +sell_market_order(symbol, vs_currency, amount)
     +get_candles(symbol, vs_currency, timeframe, num_candles, since)
     +get_fees()
   }

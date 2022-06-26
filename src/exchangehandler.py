@@ -14,14 +14,21 @@ class ExchangeHandler(ABC):
         """
         Buys in the market symbol vs_currency the specified amount of symbol
         :param symbol: symbol to buy
-        :param vs_currency: vs_currency to complete the amrket
+        :param vs_currency: vs_currency to complete the market
         :param amount: amount of symbol to buy
         :return: filled order
         """
         raise NotImplementedError
 
     @abstractmethod
-    def sell_market_order(self):
+    def sell_market_order(self, symbol, vs_currency, amount):
+        """
+        Sells in the market symbol vs_currency the specified amount of symbol
+        :param symbol: symbol to sell
+        :param vs_currency: vs_currency to complete the market
+        :param amount: amount of symbol to sell
+        :return: filled order
+        """
         raise NotImplementedError
 
     @abstractmethod
@@ -97,8 +104,32 @@ class CcxtExchangeHandler(ExchangeHandler):
 
         return order_info
 
-    def sell_market_order(self):
-        pass
+    def sell_market_order(self, symbol, vs_currency, amount):
+        """
+        See description in parent class
+        """
+        market = f"{symbol}/{vs_currency}".upper()
+        # Fix amount to exchange standards not to raise exceptions
+        amount = self._amount_to_precision(symbol=symbol,
+                                           vs_currency=vs_currency,
+                                           amount=amount)
+
+        # Execute sell order
+        sell_order = self._exchange_api.create_order(symbol=market,
+                                                    type='market',
+                                                    side='sell',
+                                                    amount=amount)
+
+        order_info = {
+            "exchange_id": sell_order['id'],
+            "timestamp": sell_order['timestamp'],
+            "price": sell_order['price'],
+            "amount": sell_order['amount'],
+            "cost": sell_order['cost'],
+            "fee_in_asset": sell_order['fee']['cost'],
+        }
+
+        return order_info
 
     def get_candles_for_strategy(self, symbol, vs_currency, timeframe, num_candles,
                                  since=None):

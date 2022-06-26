@@ -90,4 +90,14 @@ def test_binance_ccxt_exchange_handler_buys_at_market_price(binance_eh, bitcoin_
     assert expected_keys.issubset(set(order.keys()))
 
 
+@pytest.mark.spends_money
+def test_binance_ccxt_exchange_handler_sells_at_market_price(binance_eh, bitcoin_price_eur):
+    amount = value_to_test_sells_real_trades / bitcoin_price_eur
+    order = binance_eh.sell_market_order(symbol='BTC', vs_currency=currency_to_test_real_trades,
+                                         amount=amount)
+
+    expected_keys = {'exchange_id', 'timestamp', 'price', 'amount', 'cost',
+                     'fee_in_asset'}
+
+    assert expected_keys.issubset(set(order.keys()))
 
