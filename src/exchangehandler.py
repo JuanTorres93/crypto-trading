@@ -47,11 +47,33 @@ class ExchangeHandler(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_fees(self):
+    def get_fee_factor(self, symbol, vs_currency, type='spot'):
+        """
+        Gets the fee factor for the specified market (symbol + vs_currency)
+        :param symbol:
+        :param vs_currency:
+        :param type:
+        :return: dictionary containing maker and taker fees
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _market_from_symbol_and_vs_currency(self, symbol, vs_currency):
+        """
+        Formats symbol and vs_currency to create the market symbol
+        :param symbol: asset to trade
+        :param vs_currency: currency to complete the market
+        :return: str with the market symbol
+        """
         raise NotImplementedError
 
 
 class CcxtExchangeHandler(ExchangeHandler):
+    """
+    This class is intended to be the parent class of each exchange implemented
+    in ccxt until they give support for OCO orders. Then it should not be needed
+    to create child classes to manage these types of order.
+    """
     def __init__(self, exchange_api: ccxt.Exchange):
         if not isinstance(exchange_api, ccxt.Exchange):
             raise TypeError("Error exchange_api should be of type ccxt.Exchange")
@@ -60,13 +82,13 @@ class CcxtExchangeHandler(ExchangeHandler):
 
     def _amount_to_precision(self, symbol, vs_currency, amount):
         """
-        NOT TESTED METHOD
-        :param symbol:
-        :param vs_currency:
-        :param amount:
-        :return:
+        Reduces the decimals in amount in order not to raise exceptions
+        :param symbol: asset to trade
+        :param vs_currency: vs_currency to complete market
+        :param amount: amount to fix precision
+        :return: amount with corrected precision
         """
-        market = f"{symbol}/{vs_currency}"
+        market = self._market_from_symbol_and_vs_currency(symbol, vs_currency)
         try:
             amount = self._exchange_api.amount_to_precision(symbol=market,
                                                             amount=amount)
@@ -81,7 +103,7 @@ class CcxtExchangeHandler(ExchangeHandler):
         """
         See description in parent class
         """
-        market = f"{symbol}/{vs_currency}".upper()
+        market = self._market_from_symbol_and_vs_currency(symbol, vs_currency)
         # Fix amount to exchange standards not to raise exceptions
         amount = self._amount_to_precision(symbol=symbol,
                                            vs_currency=vs_currency,
@@ -108,7 +130,7 @@ class CcxtExchangeHandler(ExchangeHandler):
         """
         See description in parent class
         """
-        market = f"{symbol}/{vs_currency}".upper()
+        market = self._market_from_symbol_and_vs_currency(symbol, vs_currency)
         # Fix amount to exchange standards not to raise exceptions
         amount = self._amount_to_precision(symbol=symbol,
                                            vs_currency=vs_currency,
@@ -136,7 +158,7 @@ class CcxtExchangeHandler(ExchangeHandler):
         """
         See description in parent class
         """
-        market = f"{symbol}/{vs_currency}".upper()
+        market = self._market_from_symbol_and_vs_currency(symbol, vs_currency)
 
         # Get candles open, high, low, close, volume information
         candles_list = ccxt.binance().fetch_ohlcv(symbol=market, timeframe=timeframe,
@@ -158,8 +180,20 @@ class CcxtExchangeHandler(ExchangeHandler):
 
         return candles_df
 
-    def get_fees(self):
-        pass
+    def get_fee_factor(self, symbol, vs_currency, type='spot'):
+        """
+        See description in parent class
+        """
+        market = self._market_from_symbol_and_vs_currency(symbol, vs_currency)
+        fee_factors = self._exchange_api.fetch_trading_fee(market)
+
+        return fee_factors
+
+    def _market_from_symbol_and_vs_currency(self, symbol, vs_currency):
+        """
+        See description in parent class
+        """
+        return f"{symbol}/{vs_currency}".upper()
 
 
 class BinanceCcxtExchangeHandler(CcxtExchangeHandler):
@@ -168,29 +202,13 @@ class BinanceCcxtExchangeHandler(CcxtExchangeHandler):
 
 if __name__ == '__main__':
     import config
-    # import marketfinder as mf
-    # from pycoingecko import CoinGeckoAPI
-    #
-    # symbol = 'ada'
-    #
-    # bin_eh = BinanceCcxtExchangeHandler(ccxt.binance(
-    #     {
-    #         'apiKey': config.BINANCE_API_KEY,
-    #         'secret': config.BINANCE_SECRET_KEY,
-    #         'enableLimitRate': True,
-    #     }
-    # ))
-    #
-    # cg = mf.CoinGeckoMarketFinder(CoinGeckoAPI())
-    # markets = cg.get_top_markets('EUR')
-    # symbol_price = list(
-    #     filter(
-    #         lambda x: x['symbol'] == symbol,
-    #         markets
-    #     )
-    # )[0]['current_price']
-    #
-    # symbol_amount = 11 / symbol_price
-    #
-    # bin_eh.buy_market_order(symbol=symbol.upper(), vs_currency='EUR', amount=symbol_amount)
+    bin_eh = BinanceCcxtExchangeHandler(ccxt.binance(
+        {
+            'apiKey': config.BINANCE_API_KEY,
+            'secret': config.BINANCE_SECRET_KEY,
+            'enableLimitRate': True,
+        }
+    ))
+    bin_eh.get_fee_factor('BTC', 'EUR')
+
 

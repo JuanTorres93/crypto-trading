@@ -23,7 +23,6 @@ def binance_eh_no_keys():
 
 @pytest.fixture
 def bitcoin_price_eur():
-
     cg = mf.CoinGeckoMarketFinder(CoinGeckoAPI())
     markets = cg.get_top_markets('EUR')
     btc_price = list(
@@ -64,6 +63,13 @@ def test_ccxt_exchange_handler_not_raises_exception_on_init_with_right_api():
         pytest.fail()
 
 
+def test_binance_ccxt_exchange_handler_fixes_amount_to_precision(binance_eh_no_keys):
+    initial_amount = 3.3769647596934765978659876976397286592736492736597264359786295623478
+    fixed_amount = binance_eh_no_keys._amount_to_precision('BTC', 'EUR', initial_amount)
+
+    assert len(str(initial_amount)) > len(str(fixed_amount))
+
+
 def test_binance_ccxt_exchange_handler_gets_candles(binance_eh_no_keys):
     candles = binance_eh_no_keys.get_candles_for_strategy(symbol='BTC',
                                                           vs_currency='EUR',
@@ -101,3 +107,13 @@ def test_binance_ccxt_exchange_handler_sells_at_market_price(binance_eh, bitcoin
 
     assert expected_keys.issubset(set(order.keys()))
 
+
+def test_binance_ccxt_exchange_handler_fetches_fee_factors(binance_eh):
+    fee_factors = binance_eh.get_fee_factor('BTC', 'EUR')
+
+    assert type(fee_factors) is dict
+
+    expected_keys = {'maker', 'taker'}
+    actual_keys = set(fee_factors.keys())
+
+    assert expected_keys.issubset(actual_keys)

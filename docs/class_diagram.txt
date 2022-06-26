@@ -83,12 +83,14 @@ classDiagram
     +buy_market_order(symbol, vs_currency, amount)
     +sell_market_order(symbol, vs_currency, amount)
     +get_candles(symbol, vs_currency, timeframe, num_candles, since)
-    +get_fees()
+    +get_fee_factor(symbol, vs_currency, type='spot')
+    -_market_from_symbol_and_vs_currency(symbol, vs_currency)
   }
 
   class CcxtExchangeHandler{
     -_amount_to_precision(self, symbol, vs_currency, amount)
   }
+
   class BinanceCcxtExchangeHandler{
 
   }
