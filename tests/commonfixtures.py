@@ -1,8 +1,13 @@
+import ccxt
+from pycoingecko import CoinGeckoAPI
 import pytest
 from sqlalchemy.orm import Session
 
-import orm
+import config
+import exchangehandler as eh
+import marketfinder as mf
 import model
+import orm
 
 
 def create_trade(symbol="BTC", vs_currency_symbol="EUR", timeframe='5m',
@@ -53,3 +58,33 @@ def generic_trade_defaults():
 @pytest.fixture
 def testing_session():
     return Session(orm.test_engine)
+
+
+@pytest.fixture
+def bitcoin_price_eur():
+    cg = mf.CoinGeckoMarketFinder(CoinGeckoAPI())
+    markets = cg.get_top_markets('EUR')
+    btc_price = list(
+        filter(
+            lambda x: x['symbol'] == 'btc',
+            markets
+        )
+    )[0]['current_price']
+
+    return btc_price
+
+@pytest.fixture
+def binance_eh_no_keys():
+    return eh.BinanceCcxtExchangeHandler(ccxt.binance())
+
+
+@pytest.fixture
+def binance_eh():
+    return eh.BinanceCcxtExchangeHandler(ccxt.binance(
+        {
+            'apiKey': config.BINANCE_API_KEY,
+            'secret': config.BINANCE_SECRET_KEY,
+            'enableLimitRate': True,
+        }
+    ))
+

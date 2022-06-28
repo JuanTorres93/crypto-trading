@@ -2,11 +2,10 @@ import pytest
 
 import ccxt
 import pandas as pd
-from pycoingecko import CoinGeckoAPI
 
+from commonfixtures import bitcoin_price_eur, binance_eh, binance_eh_no_keys
 import config
 import exchangehandler as eh
-import marketfinder as mf
 
 
 # These variables are used to perform actual buys and sells
@@ -15,35 +14,6 @@ import marketfinder as mf
 currency_to_test_real_trades = 'EUR'
 value_to_test_buys_real_trades = 11
 value_to_test_sells_real_trades = 10.8
-
-@pytest.fixture
-def binance_eh_no_keys():
-    return eh.BinanceCcxtExchangeHandler(ccxt.binance())
-
-
-@pytest.fixture
-def bitcoin_price_eur():
-    cg = mf.CoinGeckoMarketFinder(CoinGeckoAPI())
-    markets = cg.get_top_markets('EUR')
-    btc_price = list(
-        filter(
-            lambda x: x['symbol'] == 'btc',
-            markets
-        )
-    )[0]['current_price']
-
-    return btc_price
-
-
-@pytest.fixture
-def binance_eh():
-    return eh.BinanceCcxtExchangeHandler(ccxt.binance(
-        {
-            'apiKey': config.BINANCE_API_KEY,
-            'secret': config.BINANCE_SECRET_KEY,
-            'enableLimitRate': True,
-        }
-    ))
 
 
 def test_ccxt_exchange_handler_raises_exception_on_init_with_wrong_api():

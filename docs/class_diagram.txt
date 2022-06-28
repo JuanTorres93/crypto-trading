@@ -94,3 +94,8 @@ classDiagram
   class BinanceCcxtExchangeHandler{
 
   }
+
+  class Strategy{
+    <<Interface>>
+    +perform_strategy(entry_price, **dfs)
+  }
