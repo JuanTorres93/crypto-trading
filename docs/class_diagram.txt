@@ -4,6 +4,8 @@ classDiagram
   AbstracRepository <|.. SqlAlchemyRepository
   ExchangeHandler <|.. CcxtExchangeHandler
   CcxtExchangeHandler <|.. BinanceCcxtExchangeHandler
+  Strategy <.. StrategyOutput
+  Strategy <|.. FakeStrategy
   class MarketFinder{
     <<Interface>>
     -_api
@@ -98,4 +100,14 @@ classDiagram
   class Strategy{
     <<Interface>>
     +perform_strategy(entry_price, **dfs)
+  }
+
+  class FakeStrategy{
+
+  }
+
+  class StrategyOutput{
+      can_enter
+      stop_loss
+      take_profit
   }
