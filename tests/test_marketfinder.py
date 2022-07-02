@@ -78,6 +78,15 @@ def test_coingecko_gets_pairs_for_exchange_vs_currency():
         assert pair['target'] == 'EUR'
 
 
+def test_coingecko_gets_pairs_for_exchange_symbol_vs():
+    pairs = coingecko_marketfinder.get_pairs_for_exchange_symbol_vs('binance', 'ADA')
+
+    assert type(pairs) is list
+    for pair in pairs:
+        assert type(pair) is dict
+        assert pair['base'] == 'ADA'
+
+
 def test_coingecko_orders_markets_according_percentage_change():
     # TODO completar test y comprobar el orden
     markets_to_trade = coingecko_marketfinder.provide_markets_to_trade('binance', 'EUR')

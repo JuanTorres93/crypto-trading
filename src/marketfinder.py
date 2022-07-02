@@ -38,6 +38,18 @@ class MarketFinder(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def get_pairs_for_exchange_symbol_vs(self, exchange_id, symbol_vs, force=False):
+        """
+        Retrieves all pairs for the given exchange and symbol_vs (firt currency in market symbol)
+        THIS FUNCTION IS INTENDED TO BE USED FOR TRIPLE SYMBOL TRADING
+        :param exchange_id: exchange id to ensure currencies are listed in it
+        :param symbol_vs: vs_currency to complete market
+        :param force: forces call on api to update instance variable
+        :return: list of dictionaries
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def list_top_symbols(self, vs_currency):
         """
         Should return an upper case list containing crypto symbols
@@ -225,6 +237,33 @@ class CoinGeckoMarketFinder(MarketFinder):
 
         return tickers
 
+    def get_pairs_for_exchange_symbol_vs(self, exchange_id, symbol_vs, force=False):
+        """
+        See description on parent class
+        """
+        # Get all pairs for exchange
+        tickers = self._get_pairs_for_exchange(exchange_id, force=force)
+
+        # Filter by the given vs_currency
+        tickers = list(
+            filter(lambda x: x['base'].upper() == symbol_vs.upper(),
+                   tickers)
+        )
+
+        # Extract base (left-part of market) and target (right-part of market)
+        # currencies to form the market
+        tickers = list(
+            map(
+                lambda x: {
+                    'base': x['base'].upper(),
+                    'target': x['target'].upper(),
+                },
+                tickers
+            )
+        )
+
+        return tickers
+
     def provide_markets_to_trade(self, exchange_id, vs_currency):
         """
         See description on parent class
@@ -329,7 +368,6 @@ class CoinGeckoMarketFinder(MarketFinder):
 
 if __name__ == '__main__':
     borrar = CoinGeckoMarketFinder(CoinGeckoAPI())
-    h = borrar._get_pairs_for_exchange('binance')
-    h = borrar._get_pairs_for_exchange('binance')
-    # h = borrar.provide_markets_to_trade('binance', 'EUR')
+    eur = borrar.get_pairs_for_exchange_vs_currency('binance', 'BTC')
+    ada = borrar.get_pairs_for_exchange_symbol_vs('binance', 'ADA')
     pass

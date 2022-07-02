@@ -15,6 +15,7 @@ classDiagram
     +__init__(api)
     +get_top_markets(vs_currency, force=True) list~dict~
     +get_pairs_for_exchange_vs_currency(exchange_id, vs_currency, force=False)
+    +get_pairs_for_exchange_symbol_vs(exchange_id, symbol_vs, force=False)
     +list_top_symbols(vs_currency) list
     +provide_markets_to_trade(exchange_id, vs_currency) list~dict~
   }
