@@ -87,6 +87,7 @@ classDiagram
     +sell_market_order(symbol, vs_currency, amount)
     +get_candles(symbol, vs_currency, timeframe, num_candles, since)
     +get_fee_factor(symbol, vs_currency, type='spot')
+    +get_free_balance(symbol)
     -_market_from_symbol_and_vs_currency(symbol, vs_currency)
   }
 

@@ -87,3 +87,9 @@ def test_binance_ccxt_exchange_handler_fetches_fee_factors(binance_eh):
     actual_keys = set(fee_factors.keys())
 
     assert expected_keys.issubset(actual_keys)
+
+
+def test_binance_ccxt_exchange_handler_fetches_free_balance(binance_eh):
+    balance = binance_eh.get_free_balance('BTC')
+
+    assert type(balance) is float

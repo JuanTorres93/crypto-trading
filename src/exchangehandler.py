@@ -67,6 +67,15 @@ class ExchangeHandler(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def get_free_balance(self, symbol):
+        """
+        Gets the free (can be used) balance for the specified symbol
+        :param symbol: symbol to get balance from
+        :return: float
+        """
+        raise NotImplementedError
+
 
 class CcxtExchangeHandler(ExchangeHandler):
     """
@@ -161,7 +170,7 @@ class CcxtExchangeHandler(ExchangeHandler):
         market = self._market_from_symbol_and_vs_currency(symbol, vs_currency)
 
         # Get candles open, high, low, close, volume information
-        candles_list = ccxt.binance().fetch_ohlcv(symbol=market, timeframe=timeframe,
+        candles_list = self._exchange_api.fetch_ohlcv(symbol=market, timeframe=timeframe,
                                              limit=num_candles, since=since)
 
         # Take all candles except for the current one (still not closed) and give
@@ -195,6 +204,12 @@ class CcxtExchangeHandler(ExchangeHandler):
         """
         return f"{symbol}/{vs_currency}".upper()
 
+    def get_free_balance(self, symbol):
+        """
+        See description in parent class
+        """
+        return self._exchange_api.fetch_free_balance()[symbol]
+
 
 class BinanceCcxtExchangeHandler(CcxtExchangeHandler):
     pass
@@ -209,6 +224,7 @@ if __name__ == '__main__':
             'enableLimitRate': True,
         }
     ))
-    bin_eh.get_fee_factor('BTC', 'EUR')
+    borrar = bin_eh.get_free_balance('BTC')
+    pass
 
 
