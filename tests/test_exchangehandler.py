@@ -54,6 +54,20 @@ def test_binance_ccxt_exchange_handler_gets_candles(binance_eh_no_keys):
                                      'candle_body_low', 'candle_body_high'})
 
 
+def test_binance_ccxt_exchange_handler_gets_candles_last_one_not_finished(binance_eh_no_keys):
+    candles = binance_eh_no_keys.get_candles_last_one_not_finished(symbol='BTC',
+                                                                   vs_currency='EUR',
+                                                                   timeframe='1h',
+                                                                   num_candles=20,
+                                                                   since=None)
+
+    assert isinstance(candles, pd.DataFrame)
+    assert len(candles) == 20
+    assert set(candles.columns).issubset({'datetime', 'open', 'high', 'low', 'close',
+                                          'volume', 'is_green', 'is_red',
+                                          'candle_body_low', 'candle_body_high'})
+
+
 @pytest.mark.spends_money
 def test_binance_ccxt_exchange_handler_buys_at_market_price(binance_eh, bitcoin_price_eur):
     amount = value_to_test_buys_real_trades / bitcoin_price_eur

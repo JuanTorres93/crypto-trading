@@ -47,6 +47,20 @@ class ExchangeHandler(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def get_candles_last_one_not_finished(self, symbol, vs_currency, timeframe,
+                                         num_candles, since=None):
+        """
+        Gets the last candles available. It retrieves even the last one (not finshed)
+        :param symbol: asset symbol
+        :param vs_currency: vs_currency symbol to complete market
+        :param timeframe: timeframe to fetch candles from 5m, 15m, 30m, 1h, ...
+        :param num_candles: total number of candles to fetch
+        :param since: since date to fetch candles
+        :return: pd.DataFrame
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def get_fee_factor(self, symbol, vs_currency, type='spot'):
         """
         Gets the fee factor for the specified market (symbol + vs_currency)
@@ -167,16 +181,30 @@ class CcxtExchangeHandler(ExchangeHandler):
         """
         See description in parent class
         """
+        candles_df = self.get_candles_last_one_not_finished(symbol=symbol,
+                                                            vs_currency=vs_currency,
+                                                            timeframe=timeframe,
+                                                            num_candles=num_candles,
+                                                            since=since)
+        candles_strategy_df = candles_df.iloc[:-1].copy()
+        return candles_strategy_df
+
+    def get_candles_last_one_not_finished(self, symbol, vs_currency, timeframe,
+                                         num_candles, since=None):
+        """
+        See description in parent class
+        """
         market = self._market_from_symbol_and_vs_currency(symbol, vs_currency)
 
         # Get candles open, high, low, close, volume information
         candles_list = self._exchange_api.fetch_ohlcv(symbol=market, timeframe=timeframe,
-                                             limit=num_candles, since=since)
+                                                      limit=num_candles, since=since)
 
         # Take all candles except for the current one (still not closed) and give
         # them some columns names in the data frame
-        candles_df = pd.DataFrame(candles_list[:-1],
-                          columns=['datetime', 'open', 'high', 'low', 'close', 'volume'])
+        candles_df = pd.DataFrame(candles_list, columns=['datetime', 'open',
+                                                         'high', 'low', 'close',
+                                                         'volume'])
 
         # Convert timestamp from Unix format to YYYY-MM-DD hh:mm:ss.sss format
         candles_df['datetime'] = pd.to_datetime(candles_df['datetime'], unit='ms')
