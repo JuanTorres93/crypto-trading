@@ -113,6 +113,16 @@ class ExchangeHandler(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def get_current_price(self, symbol, vs_currency):
+        """
+        Gets the current price for the given symbol and vs_currency
+        :param symbol: asset to trade
+        :param vs_currency: currency to complete the market
+        :return: float
+        """
+        raise NotImplementedError
+
 
 class CcxtExchangeHandler(ExchangeHandler):
     """
@@ -300,6 +310,17 @@ class CcxtExchangeHandler(ExchangeHandler):
         See description in parent class
         """
         return self._exchange_api.fetch_free_balance()[symbol]
+
+    def get_current_price(self, symbol, vs_currency):
+        """
+        See description in parent class
+        """
+        close = self.get_candles_last_one_not_finished(symbol=symbol,
+                                                       vs_currency=vs_currency,
+                                                       timeframe='1m',
+                                                       num_candles=1)['close']
+
+        return list(close)[0]
 
 
 class BinanceCcxtExchangeHandler(CcxtExchangeHandler):

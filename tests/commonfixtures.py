@@ -62,7 +62,7 @@ def testing_session():
 
 @pytest.fixture
 def bitcoin_price_eur():
-    cg = mf.CoinGeckoMarketFinder(CoinGeckoAPI())
+    cg = mf.CoinGeckoMarketFinder()
     markets = cg.get_top_markets('EUR')
     btc_price = list(
         filter(

@@ -1,10 +1,9 @@
-from pycoingecko import CoinGeckoAPI
 import pytest
 
 import marketfinder
 
 
-coingecko_marketfinder = marketfinder.CoinGeckoMarketFinder(CoinGeckoAPI())
+coingecko_marketfinder = marketfinder.CoinGeckoMarketFinder()
 
 
 def test_coingecko_gets_top_markets():

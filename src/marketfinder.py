@@ -6,8 +6,9 @@ from pycoingecko import CoinGeckoAPI
 
 
 class MarketFinder(ABC):
-    def __init__(self, api):
-        self._api = api
+    def __init__(self):
+        # Instantiate api on children classes
+        self._api = None
         # Saves top markets info when get_called_markets is called to avoid api calls
         self._top_markets = []
         # Saves markets to trade when provide_markets_to_trade is called to avoid api calls
@@ -70,11 +71,9 @@ class MarketFinder(ABC):
 
 
 class CoinGeckoMarketFinder(MarketFinder):
-    def __init__(self, api):
-        super().__init__(api)
-        if not isinstance(api, CoinGeckoAPI):
-            raise TypeError("api should be CoinGeckoAPI")
-
+    def __init__(self):
+        super().__init__()
+        self._api = CoinGeckoAPI()
         # Saves available pairs for exchange when get_pairs_for_exchange is called to avoid api calls
         self._pairs_for_exchange = []
         # Time to wait when api credits are over
@@ -85,7 +84,7 @@ class CoinGeckoMarketFinder(MarketFinder):
         See description on parent class
         """
         if len(self._top_markets) == 0 or force:
-            # If no markets have already been fetche, or it is force to fetch them
+            # If no markets have already been fetched, or it is force to fetch them
             markets_fetched = False
             while not markets_fetched:
                 # While loop is meant for handling lack of credits for api calls
@@ -367,7 +366,7 @@ class CoinGeckoMarketFinder(MarketFinder):
 
 
 if __name__ == '__main__':
-    borrar = CoinGeckoMarketFinder(CoinGeckoAPI())
+    borrar = CoinGeckoMarketFinder()
     eur = borrar.get_pairs_for_exchange_vs_currency('binance', 'BTC')
     ada = borrar.get_pairs_for_exchange_symbol_vs('binance', 'ADA')
     pass

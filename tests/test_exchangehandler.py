@@ -136,3 +136,9 @@ def test_binance_ccxt_exchange_handler_fetches_market(binance_eh):
     actual_keys = set(market_info.keys())
 
     assert expected_keys.issubset(actual_keys)
+
+
+def test_binance_ccxt_exchange_handler_gets_current_price(binance_eh_no_keys):
+    price = binance_eh_no_keys.get_current_price("BTC", "EUR")
+
+    assert type(price) is float

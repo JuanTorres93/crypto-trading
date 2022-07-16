@@ -1,4 +1,6 @@
 classDiagram
+  Services <.. Strategy
+  Services <.. ExchangeHandler
   MarketFinder <|.. CoinGeckoMarketFinder
   Trade *-- TradeStatus
   AbstracRepository <|.. SqlAlchemyRepository
@@ -6,13 +8,13 @@ classDiagram
   CcxtExchangeHandler <|.. BinanceCcxtExchangeHandler
   Strategy <.. StrategyOutput
   Strategy <|.. FakeStrategy
+  StrategyOutput <.. PositionType
   class MarketFinder{
     <<Interface>>
     -_api
     -_top_markets
     -_markets_to_trade
     +pairs_for_exchange_vs_currency
-    +__init__(api)
     +get_top_markets(vs_currency, force=True) list~dict~
     +get_pairs_for_exchange_vs_currency(exchange_id, vs_currency, force=False)
     +get_pairs_for_exchange_symbol_vs(exchange_id, symbol_vs, force=False)
@@ -84,11 +86,14 @@ classDiagram
     -_exchange_api
     +__init_(exchange_api)
     +buy_market_order(symbol, vs_currency, amount)
-    +sell_market_order(symbol, vs_currency, amount)
+    +sell_market_order_diminishing_amount(symbol, vs_currency, amount)
+    +fetch_market(symbol, vs_currency):
     +get_candles_for_strategy(symbol, vs_currency, timeframe, num_candles, since)
     +get_candles_last_one_not_finished(symbol, vs_currency, timeframe, num_candles, since)
     +get_fee_factor(symbol, vs_currency, type='spot')
     +get_free_balance(symbol)
+    +get_current_price(symbol, vs_currency)
+    -_sell_market_order(symbol, vs_currency, amount)
     -_market_from_symbol_and_vs_currency(symbol, vs_currency)
   }
 
@@ -110,7 +115,18 @@ classDiagram
   }
 
   class StrategyOutput{
-      can_enter
-      stop_loss
-      take_profit
+      +can_enter: bool
+      +stop_loss: float
+      +entry_price: float
+      +take_profit: float
+      +position_type: str
+  }
+
+  class PositionType{
+    +LONG
+    +SHORT
+  }
+
+  class Services{
+    +position_can_be_profitable(exchange_handler, strategy_output, symbol, vs_currency, amount)
   }
