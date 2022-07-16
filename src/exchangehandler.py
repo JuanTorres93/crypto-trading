@@ -21,9 +21,22 @@ class ExchangeHandler(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def sell_market_order(self, symbol, vs_currency, amount):
+    def _sell_market_order(self, symbol, vs_currency, amount):
         """
         Sells in the market symbol vs_currency the specified amount of symbol
+        :param symbol: symbol to sell
+        :param vs_currency: vs_currency to complete the market
+        :param amount: amount of symbol to sell
+        :return: filled order
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def sell_market_order_diminishing_amount(self, symbol, vs_currency, amount):
+        """
+        Sells in the market symbol vs_currency the specified amount of symbol.
+        If the exchange is not able to sell the specified amount, then reduce it
+        little by little until it can.
         :param symbol: symbol to sell
         :param vs_currency: vs_currency to complete the market
         :param amount: amount of symbol to sell
@@ -159,7 +172,7 @@ class CcxtExchangeHandler(ExchangeHandler):
 
         return order_info
 
-    def sell_market_order(self, symbol, vs_currency, amount):
+    def _sell_market_order(self, symbol, vs_currency, amount):
         """
         See description in parent class
         """
@@ -185,6 +198,25 @@ class CcxtExchangeHandler(ExchangeHandler):
         }
 
         return order_info
+
+    def sell_market_order_diminishing_amount(self, symbol, vs_currency, amount):
+        """
+        See description in parent class
+        """
+        min_qty = None
+
+        while amount > 0:
+            try:
+                sell_order = self._sell_market_order(symbol=symbol,
+                                                     vs_currency=vs_currency,
+                                                     amount=amount)
+
+                return sell_order
+            except ccxt.InsufficientFunds:
+                if min_qty is None:
+                    min_qty = self.fetch_market(symbol=symbol,
+                                                vs_currency=vs_currency)['min_qty']
+                amount -= min_qty / 2
 
     def fetch_market(self, symbol: str, vs_currency):
         """
