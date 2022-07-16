@@ -107,3 +107,15 @@ def test_binance_ccxt_exchange_handler_fetches_free_balance(binance_eh):
     balance = binance_eh.get_free_balance('BTC')
 
     assert type(balance) is float
+
+
+def test_binance_ccxt_exchange_handler_fetches_market(binance_eh):
+    market_info = binance_eh.fetch_market('BTC', 'EUR')
+
+    assert type(market_info) is dict
+
+    expected_keys = {'min_price', 'max_price', 'min_qty', 'max_qty',
+                     'order_types', 'oco_allowed'}
+    actual_keys = set(market_info.keys())
+
+    assert expected_keys.issubset(actual_keys)

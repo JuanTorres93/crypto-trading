@@ -32,6 +32,16 @@ class ExchangeHandler(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def fetch_market(self, symbol: str, vs_currency):
+        """
+        Returns useful information for the market of the given symbol
+        :param symbol: symbol to sell
+        :param vs_currency: vs_currency to complete the market
+        :return: Dictionary containing market information
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def get_candles_for_strategy(self, symbol, vs_currency, timeframe, num_candles,
                                  since=None):
         """
@@ -175,6 +185,27 @@ class CcxtExchangeHandler(ExchangeHandler):
         }
 
         return order_info
+
+    def fetch_market(self, symbol: str, vs_currency):
+        """
+        See description in parent class
+        """
+        market_symbol = self._market_from_symbol_and_vs_currency(symbol=symbol,
+                                                                 vs_currency=vs_currency)
+        try:
+            market = self._exchange_api.market(symbol=market_symbol)
+        except ccxt.errors.ExchangeError as e:
+            self._exchange_api.load_markets()
+            market = self._exchange_api.market(symbol=market_symbol)
+
+        return {
+            'min_price': float(market['limits']['cost']['min']),
+            'max_price': float(market['limits']['price']['max']),
+            'min_qty': float(market['limits']['amount']['min']),
+            'max_qty': float(market['limits']['amount']['max']),
+            'order_types': market['info']['orderTypes'],
+            'oco_allowed': market['info']['ocoAllowed'],
+        }
 
     def get_candles_for_strategy(self, symbol, vs_currency, timeframe, num_candles,
                                  since=None):

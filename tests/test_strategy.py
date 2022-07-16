@@ -1,7 +1,5 @@
 import pytest
 
-from ccxt import binance
-
 from commonfixtures import bitcoin_price_eur, binance_eh_no_keys
 import strategy as st
 
@@ -14,7 +12,7 @@ def test_dictionary_keys_for_strategy_output():
     assert type(sto.stop_loss) == float
 
 
-def test_fake_strategy_returns_correct_dictionary(bitcoin_price_eur, binance_eh_no_keys):
+def test_fake_strategy_returns_strategy_output(bitcoin_price_eur, binance_eh_no_keys):
     candles = binance_eh_no_keys.get_candles_for_strategy(symbol='BTC',
                                                           vs_currency='EUR',
                                                           timeframe='1h',
