@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import datetime
 
 
 class TradeStatus:
@@ -37,3 +38,35 @@ class Trade:
     crypto_quantity_exit: float = None
     exit_fee_vs_currency: float = None
     exit_date: str = None
+
+
+def format_date_for_database(datetime_obj):
+    return datetime_obj.strftime("%d/%m/%Y %H:%M:%S")
+
+
+def create_initial_trade(symbol, vs_currency_symbol, timeframe, stop_loss,
+                         entry_price, take_profit, vs_currency_entry,
+                         crypto_quantity_entry, entry_fee_vs_currency,
+                         position, entry_order_exchange_id,
+                         percentage_change_1h_on_entry,
+                         percentage_change_1d_on_entry,
+                         percentage_change_7d_on_entry, strategy_name, is_real,
+                         entry_date=format_date_for_database(datetime.now()),
+                         status=TradeStatus.OPENED):
+    """
+    :return: Trade object with the initial information for a trade
+    """
+
+    return Trade(symbol=symbol, vs_currency_symbol=vs_currency_symbol,
+                 timeframe=timeframe, stop_loss=stop_loss,
+                 entry_price=entry_price, take_profit=take_profit,
+                 status=status, vs_currency_entry=vs_currency_entry,
+                 crypto_quantity_entry=crypto_quantity_entry,
+                 entry_fee_vs_currency=entry_fee_vs_currency,
+                 position=position, entry_date=entry_date,
+                 entry_order_exchange_id=entry_order_exchange_id,
+                 percentage_change_1h_on_entry=percentage_change_1h_on_entry,
+                 percentage_change_1d_on_entry=percentage_change_1d_on_entry,
+                 percentage_change_7d_on_entry=percentage_change_7d_on_entry,
+                 strategy_name=strategy_name, is_real=is_real)
+

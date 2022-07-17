@@ -41,9 +41,10 @@ def create_trade(symbol="BTC", vs_currency_symbol="EUR", timeframe='5m',
                        oco_stop_exchange_id=oco_stop_exchange_id,
                        oco_limit_exchange_id=oco_limit_exchange_id)
 
+
 @pytest.fixture
 def generic_trade_defaults():
-    return model.Trade(symbol="BTC", vs_currency_symbol="EUR", timeframe='5m',
+    return model.create_initial_trade(symbol="BTC", vs_currency_symbol="EUR", timeframe='5m',
                        stop_loss=1, entry_price=2, take_profit=3,
                        status=model.TradeStatus.OPENED, vs_currency_entry=20,
                        crypto_quantity_entry=1.0, entry_fee_vs_currency=.2,
@@ -73,6 +74,7 @@ def bitcoin_price_eur():
     )[0]['current_price']
 
     return btc_price
+
 
 @pytest.fixture
 def binance_eh_no_keys():
