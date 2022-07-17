@@ -1,4 +1,6 @@
 classDiagram
+  Bot <.. ExchangeHandler
+  Bot <.. MarketFinder
   Services <.. Strategy
   Services <.. ExchangeHandler
   MarketFinder <|.. CoinGeckoMarketFinder
@@ -132,4 +134,16 @@ classDiagram
 
   class Services{
     +position_can_be_profitable(exchange_handler, strategy_output, symbol, vs_currency, amount)
+  }
+
+  class Indicator{
+
+  }
+
+  class Bot{
+    -_exchange_id
+    -_eh: ExchangeHandler
+    -_mf: MarketFinder
+    +provide_markets_to_trade(vs_currency) list~dict~
+    +get_pairs_for_exchange_vs_currency(vs_currency, force=False)
   }
