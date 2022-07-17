@@ -8,6 +8,7 @@ import exchangehandler as eh
 import marketfinder as mf
 import model
 import orm
+import repository
 
 
 def create_trade(symbol="BTC", vs_currency_symbol="EUR", timeframe='5m',
@@ -88,3 +89,7 @@ def binance_eh():
         }
     ))
 
+
+@pytest.fixture
+def sqlalchemyrepository_testing(testing_session):
+    return repository.SqlAlchemyRepository(testing_session)

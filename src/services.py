@@ -6,6 +6,7 @@ def position_can_be_profitable(exchange_handler: eh.ExchangeHandler,
                                strategy_output: st.StrategyOutput, symbol,
                                vs_currency, amount):
     """
+    Not tested method
     Checks whether position can be profitable or not taking fees into accouunt
     :param exchange_handler: ExchangeHandler to fetch fees
     :param strategy_output: Strategy output to test

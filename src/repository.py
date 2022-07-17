@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from sqlalchemy import and_
+
 import model
 
 
@@ -30,6 +32,17 @@ class AbstractRepository(ABC):
                                       exit_fee_vs_currency, exit_date):
         raise NotImplementedError
 
+    @abstractmethod
+    def get_opened_positions(self, symbol=None, vs_currency=None):
+        """
+        Queries all currently opened positions. If symbol and vs_currency are
+        specified, then filter by their values
+        :param symbol: Left-hand side of market symbol
+        :param vs_currency: Right-hand side of market symbol
+        :return: List containing trades with opened positions
+        """
+        raise NotImplementedError
+
 
 class SqlAlchemyRepository(AbstractRepository):
     def add_trade(self, trade):
@@ -58,3 +71,19 @@ class SqlAlchemyRepository(AbstractRepository):
         trade.exit_fee_vs_currency = exit_fee_vs_currency
         trade.exit_date = exit_date
         self.commit()
+
+    def get_opened_positions(self, symbol=None, vs_currency=None):
+        if (symbol is None) or (vs_currency is None):
+            return self._session.query(model.Trade).filter_by(status=model.TradeStatus.OPENED).all()
+        elif (symbol is not None) or (vs_currency is not None):
+            return self._session.query(model.Trade).where(
+                and_(
+                    model.Trade.status == model.TradeStatus.OPENED,
+                    model.Trade.symbol == symbol,
+                    model.Trade.vs_currency_symbol == vs_currency,
+                )
+            ).all()
+
+
+if __name__ == "__main__":
+    pass

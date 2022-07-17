@@ -3,12 +3,14 @@ classDiagram
   Services <.. ExchangeHandler
   MarketFinder <|.. CoinGeckoMarketFinder
   Trade *-- TradeStatus
-  AbstracRepository <|.. SqlAlchemyRepository
+  Trade <-- SqlAlchemyRepository
+  AbstractRepository <|.. SqlAlchemyRepository
   ExchangeHandler <|.. CcxtExchangeHandler
   CcxtExchangeHandler <|.. BinanceCcxtExchangeHandler
   Strategy <.. StrategyOutput
   Strategy <|.. FakeStrategy
   StrategyOutput <.. PositionType
+
   class MarketFinder{
     <<Interface>>
     -_api
@@ -66,7 +68,7 @@ classDiagram
     +LOST: str
   }
 
-  class AbstracRepository{
+  class AbstractRepository{
     <<Interface>>
     -_session
     +__init__(session)
@@ -75,6 +77,7 @@ classDiagram
     +commit()
     +update_trade_on_oco_order_creation(id, oco_stop_exchange_id, oco_limit_exchange_id)
     +update_trade_on_exit_position(id, vs_currency_result_no_fees, status, crypto_quantity_exit, exit_fee_vs_currency, exit_date)
+    +get_opened_positions(symbol=None, vs_currency=None)
   }
 
   class SqlAlchemyRepository{
