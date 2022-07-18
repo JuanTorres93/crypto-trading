@@ -1,3 +1,4 @@
+import config
 import exchangehandler as eh
 import strategy as st
 
@@ -54,6 +55,27 @@ def position_can_be_profitable(exchange_handler: eh.ExchangeHandler,
             raise ValueError
 
     return False
+
+
+def manage_risk_on_entry(vs_currency_on_entry, strategy_output):
+    """
+    Applies risk management to the available money. If the initial risk is
+    greater than config.MAX_PERCENTAGE_TO_RISK, then it calculates the money that
+    must be used to ensure that, at maximum, config.max_percentage_to_use is
+    fulfilled.
+    :param vs_currency_on_entry: quantity of vs_currency to fix
+    :param strategy_output: Strategy output
+    :return: amount of vs_currency that is going to be used to buy.
+    """
+    entry_price = strategy_output.entry_price
+    stop_loss = strategy_output.stop_loss
+
+    risked_percentage = 100 * abs(entry_price - stop_loss) / entry_price
+
+    if risked_percentage <= config.MAX_PERCENTAGE_TO_RISK:
+        return vs_currency_on_entry
+    else:
+        return vs_currency_on_entry * config.MAX_PERCENTAGE_TO_RISK / risked_percentage
 
 
 if __name__ == "__main__":

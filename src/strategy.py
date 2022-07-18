@@ -27,6 +27,13 @@ class Strategy(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def strategy_name(self):
+        """
+        :return: strategy name
+        """
+        raise NotImplementedError
+
 
 class TestStrategy(Strategy):
     """
@@ -43,6 +50,9 @@ class TestStrategy(Strategy):
         return StrategyOutput(can_enter=False, take_profit=12.2, stop_loss=10,
                               entry_price=11,
                               position_type=PositionType.LONG)
+
+    def strategy_name(self):
+        return "test_strategy"
 
 
 class FakeStrategy(Strategy):
@@ -64,3 +74,6 @@ class FakeStrategy(Strategy):
         return StrategyOutput(can_enter=False, take_profit=tp, stop_loss=sl,
                               entry_price=entry_price,
                               position_type=PositionType.LONG)
+
+    def strategy_name(self):
+        return "fake_strategy"
