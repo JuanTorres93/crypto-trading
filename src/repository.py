@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
 
 from sqlalchemy import and_
+from sqlalchemy.orm import Session
 
 import model
+import orm
 
 
 class AbstractRepository(ABC):
@@ -84,6 +86,21 @@ class SqlAlchemyRepository(AbstractRepository):
                 )
             ).all()
 
+
+def provide_sqlalchemy_repository(real_db):
+    """
+    Tested indirectly through sqlalchemyrepository_testing fixture
+    :param real_db: if True uses real database connection, otherwise uses testing
+    :return: SqlAlchemyRepository
+    """
+    if real_db:
+        return SqlAlchemyRepository(
+            Session(orm.engine)
+        )
+    else:
+        return SqlAlchemyRepository(
+            Session(orm.test_engine)
+        )
 
 if __name__ == "__main__":
     pass
