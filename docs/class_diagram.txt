@@ -1,6 +1,4 @@
 classDiagram
-  Bot <.. ExchangeHandler
-  Bot <.. MarketFinder
   Services <.. Strategy
   Services <.. ExchangeHandler
   Services <.. MarketFinder
@@ -137,16 +135,4 @@ classDiagram
   class Services{
     +position_can_be_profitable(exchange_handler, strategy_output, symbol, vs_currency, amount)
     +manage_risk_on_entry(vs_currency_on_entry, strategy_output)
-  }
-
-  class Indicator{
-
-  }
-
-  class Bot{
-    -_exchange_id
-    -_eh: ExchangeHandler
-    -_mf: MarketFinder
-    +provide_markets_to_trade(vs_currency) list~dict~
-    +get_pairs_for_exchange_vs_currency(vs_currency, force=False)
   }
