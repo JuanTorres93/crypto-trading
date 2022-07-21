@@ -2,4 +2,6 @@ ccxt
 numpy
 pandas
 pycoingecko
+scipy
 SQLAlchemy
+ta
