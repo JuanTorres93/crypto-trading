@@ -94,4 +94,4 @@ def binance_eh():
 
 @pytest.fixture
 def sqlalchemyrepository_testing(testing_session):
-    return repository.provide_sqlalchemy_repository(real_db=True)
+    return repository.provide_sqlalchemy_repository(real_db=False)

@@ -1,6 +1,7 @@
 classDiagram
   Services <.. Strategy
   Services <.. ExchangeHandler
+  Services <.. MarketFinder
   MarketFinder <|.. CoinGeckoMarketFinder
   Trade *-- TradeStatus
   SqlAlchemyRepository <-- Trade

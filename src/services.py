@@ -1,9 +1,25 @@
+import ccxt
+
 import config
-import exchangehandler as eh
+import exchangehandler as ex_han
+import marketfinder as mar_fin
 import strategy as st
 
 
-def position_can_be_profitable(exchange_handler: eh.ExchangeHandler,
+eh = ex_han.BinanceCcxtExchangeHandler(
+    ccxt.binance(
+        {
+            'apiKey': config.BINANCE_API_KEY,
+            'secret': config.BINANCE_SECRET_KEY,
+            'enableLimitRate': True,
+        }
+    )
+)
+
+mf = mar_fin.CoinGeckoMarketFinder()
+
+
+def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler,
                                strategy_output: st.StrategyOutput, symbol,
                                vs_currency, amount):
     """
@@ -79,29 +95,18 @@ def manage_risk_on_entry(vs_currency_on_entry, strategy_output):
 
 
 if __name__ == "__main__":
-    import ccxt
-
-    import config
-    bin_eh = eh.BinanceCcxtExchangeHandler(ccxt.binance(
-        {
-            'apiKey': config.BINANCE_API_KEY,
-            'secret': config.BINANCE_SECRET_KEY,
-            'enableLimitRate': True,
-        }
-    ))
-
     symbol = 'ETH'
     vs_currency = 'EUR'
     amount = 1
 
-    candles = bin_eh.get_candles_for_strategy(symbol=symbol,
+    candles = eh.get_candles_for_strategy(symbol=symbol,
                                               vs_currency=vs_currency,
                                               timeframe='1h',
                                               num_candles=20)
 
-    current_price = bin_eh.get_current_price(symbol=symbol, vs_currency=vs_currency)
+    current_price = eh.get_current_price(symbol=symbol, vs_currency=vs_currency)
 
     stout = st.FakeStrategy().perform_strategy(entry_price=current_price,
                                                df=candles)
 
-    print(position_can_be_profitable(bin_eh, stout, symbol, vs_currency, amount))
+    print(position_can_be_profitable(eh, stout, symbol, vs_currency, amount))

@@ -77,7 +77,7 @@ class SqlAlchemyRepository(AbstractRepository):
     def get_opened_positions(self, symbol=None, vs_currency=None):
         if (symbol is None) or (vs_currency is None):
             return self._session.query(model.Trade).filter_by(status=model.TradeStatus.OPENED).all()
-        elif (symbol is not None) or (vs_currency is not None):
+        elif (symbol is not None) and (vs_currency is not None):
             return self._session.query(model.Trade).where(
                 and_(
                     model.Trade.status == model.TradeStatus.OPENED,
