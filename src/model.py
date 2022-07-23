@@ -73,7 +73,7 @@ def create_initial_trade(symbol, vs_currency_symbol, timeframe, stop_loss,
 
 def complete_trade_with_market_sell_info(trade, vs_currency_result_no_fees,
                                          crypto_quantity_exit, exit_fee_vs_currency,
-                                         exit_date):
+                                         exit_date, status):
     """
     Updates the relevant information for a closing trade
     """
@@ -81,3 +81,4 @@ def complete_trade_with_market_sell_info(trade, vs_currency_result_no_fees,
     trade.crypto_quantity_exit = crypto_quantity_exit
     trade.exit_fee_vs_currency = exit_fee_vs_currency
     trade.exit_date = exit_date
+    trade.status = status

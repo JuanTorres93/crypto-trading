@@ -1,6 +1,8 @@
 import pytest
 
 import config
+from commonfixtures import sqlalchemyrepository_testing
+import model
 import repository as rp
 import services
 import strategy as st
@@ -16,3 +18,4 @@ def test_service_manages_risk_on_long_position():
                                                       st_out)
 
     assert enter_vs_currency < vs_currency_on_entry
+

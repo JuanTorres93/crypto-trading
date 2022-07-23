@@ -81,7 +81,8 @@ def test_trade_is_completed_by_market_sell():
                                                vs_currency_result_no_fees=2,
                                                crypto_quantity_exit=.98,
                                                exit_fee_vs_currency=.1,
-                                               exit_date="2022-07-21 15:23:25")
+                                               exit_date="2022-07-21 15:23:25",
+                                               status=model.TradeStatus.WON)
 
     assert trade.vs_currency_result_no_fees is not None
     assert trade.crypto_quantity_exit is not None

@@ -1,8 +1,12 @@
+from datetime import datetime
+
 import ccxt
 
 import config
 import exchangehandler as ex_han
 import marketfinder as mar_fin
+import model
+import repository as rp
 import strategy as st
 
 
@@ -94,19 +98,101 @@ def manage_risk_on_entry(vs_currency_on_entry, strategy_output):
         return vs_currency_on_entry * config.MAX_PERCENTAGE_TO_RISK / risked_percentage
 
 
+def close_opened_position(symbol, vs_currency):
+    """
+    NOT TESTED METHOD
+    Checks for opened position for the pair symbol-vs_currency. If there is an
+    opened position, then retrieves current price and act in function of take
+    profit or stop loss
+    :param symbol: left-hand side of market info
+    :param vs_currency: right-hand side of market info
+    :return:
+    """
+    repo = rp.provide_sqlalchemy_repository(real_db=True)
+
+    opened_trade = repo.get_opened_positions(symbol=symbol,
+                                             vs_currency=vs_currency)[0]
+
+    if opened_trade:
+        take_profit = opened_trade.modified_take_profit if opened_trade.modified_take_profit is not None else opened_trade.take_profit
+        stop_loss = opened_trade.modified_stop_loss if opened_trade.modified_stop_loss is not None else opened_trade.stop_loss
+
+        # current_price = eh.get_current_price(symbol=symbol,
+        #                                      vs_currency=vs_currency)
+
+        current_low = list(eh.get_candles_last_one_not_finished(symbol=symbol,
+                                                           vs_currency=vs_currency,
+                                                           timeframe='1m',
+                                                           num_candles=1)['low'])[0]
+
+        current_high = list(eh.get_candles_last_one_not_finished(symbol=symbol,
+                                                           vs_currency=vs_currency,
+                                                           timeframe='1m',
+                                                           num_candles=1)['high'])[0]
+
+        if current_high >= take_profit:
+            # TODO idea: no vender, sino aumentar take profit y luego ir comprobando
+            exit_price = take_profit
+        elif current_low <= stop_loss:
+            exit_price = stop_loss
+        else:
+            return
+
+        if not opened_trade.is_real:
+            fee_factor = eh.get_fee_factor(symbol=symbol,
+                                           vs_currency=vs_currency)['taker']
+            # Estimation of crypto quantity on exit. Susceptible of being changed
+            crypto_quantity_exit = opened_trade.crypto_quantity_entry * (1- fee_factor)
+            exit_date = model.format_date_for_database(datetime.now())
+
+            vs_currency_exit = exit_price * crypto_quantity_exit
+            exit_fee_vs_currency = vs_currency_exit * fee_factor
+            vs_currency_result_no_fees = vs_currency_exit - opened_trade.vs_currency_entry
+
+            result = vs_currency_result_no_fees - opened_trade.entry_fee_vs_currency - exit_fee_vs_currency
+
+            status = model.TradeStatus.WON if result > 0 else model.TradeStatus.LOST
+
+        else:
+            pass
+
+        model.complete_trade_with_market_sell_info(trade=opened_trade,
+                                                   vs_currency_result_no_fees=vs_currency_result_no_fees,
+                                                   crypto_quantity_exit=crypto_quantity_exit,
+                                                   exit_fee_vs_currency=exit_fee_vs_currency,
+                                                   exit_date=exit_date,
+                                                   status=status)
+        repo.commit()
+
+
 if __name__ == "__main__":
-    symbol = 'ETH'
+    from time import sleep
+    symbol = 'BTC'
     vs_currency = 'EUR'
     amount = 1
 
-    candles = eh.get_candles_for_strategy(symbol=symbol,
-                                              vs_currency=vs_currency,
-                                              timeframe='1h',
-                                              num_candles=20)
+    repo = rp.provide_sqlalchemy_repository(real_db=True)
+    op = repo.get_opened_positions(symbol, vs_currency)
 
-    current_price = eh.get_current_price(symbol=symbol, vs_currency=vs_currency)
+    while repo.get_opened_positions(symbol, vs_currency):
+        print("fetching")
+        close_opened_position(symbol, vs_currency)
+        sleep(2)
 
-    stout = st.FakeStrategy().perform_strategy(entry_price=current_price,
-                                               df=candles)
+    print("closed")
 
-    print(position_can_be_profitable(eh, stout, symbol, vs_currency, amount))
+    # trade = model.create_initial_trade(symbol="BTC", vs_currency_symbol="EUR",
+    #                                    timeframe='5m',
+    #                                    stop_loss=22555, entry_price=22626, take_profit=22656,
+    #                                    status=model.TradeStatus.OPENED, vs_currency_entry=20,
+    #                                    crypto_quantity_entry=1.0, entry_fee_vs_currency=.2,
+    #                                    position='L',
+    #                                    entry_date='2022-07-21 15:19:15',
+    #                                    entry_order_exchange_id='2022-07-21 15:19:15',
+    #                                    percentage_change_1d_on_entry='2',
+    #                                    percentage_change_7d_on_entry='2',
+    #                                    percentage_change_1h_on_entry='2',
+    #                                    strategy_name='test',
+    #                                    is_real=False)
+    # repo.add_trade(trade)
+    # repo.commit()

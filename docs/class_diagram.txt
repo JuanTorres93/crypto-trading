@@ -2,6 +2,7 @@ classDiagram
   Services <.. Strategy
   Services <.. ExchangeHandler
   Services <.. MarketFinder
+  Services <.. AbstractRepository
   MarketFinder <|.. CoinGeckoMarketFinder
   Trade *-- TradeStatus
   SqlAlchemyRepository <-- Trade
@@ -135,4 +136,5 @@ classDiagram
   class Services{
     +position_can_be_profitable(exchange_handler, strategy_output, symbol, vs_currency, amount)
     +manage_risk_on_entry(vs_currency_on_entry, strategy_output)
+    +close_opened_position(symbol, vs_currency)
   }

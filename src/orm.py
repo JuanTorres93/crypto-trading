@@ -44,7 +44,7 @@ trade_table = Table(
     Column('modified_stop_loss', Float, nullable=True),
     Column('modified_take_profit', Float, nullable=True),
     Column('crypto_quantity_exit', Float, nullable=True),
-    Column('exit_fee_fiat', Float, nullable=True),
+    Column('exit_fee_vs_currency', Float, nullable=True),
     Column('exit_date', String, nullable=True),
 )
 
