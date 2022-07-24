@@ -1,4 +1,5 @@
 from datetime import datetime
+import time
 
 import ccxt
 
@@ -111,14 +112,13 @@ def close_opened_position(symbol, vs_currency):
     repo = rp.provide_sqlalchemy_repository(real_db=True)
 
     opened_trade = repo.get_opened_positions(symbol=symbol,
-                                             vs_currency=vs_currency)[0]
+                                             vs_currency=vs_currency)
 
     if opened_trade:
+        opened_trade = opened_trade[0]
+
         take_profit = opened_trade.modified_take_profit if opened_trade.modified_take_profit is not None else opened_trade.take_profit
         stop_loss = opened_trade.modified_stop_loss if opened_trade.modified_stop_loss is not None else opened_trade.stop_loss
-
-        # current_price = eh.get_current_price(symbol=symbol,
-        #                                      vs_currency=vs_currency)
 
         current_low = list(eh.get_candles_last_one_not_finished(symbol=symbol,
                                                            vs_currency=vs_currency,
@@ -139,6 +139,8 @@ def close_opened_position(symbol, vs_currency):
             return
 
         if not opened_trade.is_real:
+            # Simulate strategy in real time
+
             fee_factor = eh.get_fee_factor(symbol=symbol,
                                            vs_currency=vs_currency)['taker']
             # Estimation of crypto quantity on exit. Susceptible of being changed
@@ -154,6 +156,7 @@ def close_opened_position(symbol, vs_currency):
             status = model.TradeStatus.WON if result > 0 else model.TradeStatus.LOST
 
         else:
+            # Perform the strategy with actual money
             pass
 
         model.complete_trade_with_market_sell_info(trade=opened_trade,
@@ -165,34 +168,137 @@ def close_opened_position(symbol, vs_currency):
         repo.commit()
 
 
-if __name__ == "__main__":
-    from time import sleep
-    symbol = 'BTC'
-    vs_currency = 'EUR'
-    amount = 1
-
+def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
+                   take_profit, vs_currency_entry, crypto_quantity_entry,
+                   entry_fee_vs_currency, position, entry_order_exchange_id,
+                   percentage_change_1h_on_entry, percentage_change_1d_on_entry,
+                   percentage_change_7d_on_entry, strategy_name, is_real):
+    """
+    NOT TESTED METHOD
+    Checks for opened position for the pair symbol-vs_currency. If there is not an
+    opened position, then enters.
+    :param symbol: left-hand side of market info
+    :param vs_currency: right-hand side of market info
+    :return:
+    """
     repo = rp.provide_sqlalchemy_repository(real_db=True)
-    op = repo.get_opened_positions(symbol, vs_currency)
 
-    while repo.get_opened_positions(symbol, vs_currency):
-        print("fetching")
-        close_opened_position(symbol, vs_currency)
-        sleep(2)
+    opened_trade = repo.get_opened_positions(symbol=symbol,
+                                             vs_currency=vs_currency)
 
-    print("closed")
+    if not opened_trade:
+        if not is_real:
+            # Simulate strategy in real time
 
-    # trade = model.create_initial_trade(symbol="BTC", vs_currency_symbol="EUR",
-    #                                    timeframe='5m',
-    #                                    stop_loss=22555, entry_price=22626, take_profit=22656,
-    #                                    status=model.TradeStatus.OPENED, vs_currency_entry=20,
-    #                                    crypto_quantity_entry=1.0, entry_fee_vs_currency=.2,
-    #                                    position='L',
-    #                                    entry_date='2022-07-21 15:19:15',
-    #                                    entry_order_exchange_id='2022-07-21 15:19:15',
-    #                                    percentage_change_1d_on_entry='2',
-    #                                    percentage_change_7d_on_entry='2',
-    #                                    percentage_change_1h_on_entry='2',
-    #                                    strategy_name='test',
-    #                                    is_real=False)
-    # repo.add_trade(trade)
-    # repo.commit()
+            trade = model.create_initial_trade(symbol=symbol,
+                                               vs_currency_symbol=vs_currency,
+                                               timeframe=timeframe,
+                                               stop_loss=stop_loss,
+                                               entry_price=entry_price,
+                                               take_profit=take_profit,
+                                               vs_currency_entry=vs_currency_entry,
+                                               crypto_quantity_entry=crypto_quantity_entry,
+                                               entry_fee_vs_currency=entry_fee_vs_currency,
+                                               position=position,
+                                               entry_order_exchange_id=entry_order_exchange_id,
+                                               percentage_change_1h_on_entry=percentage_change_1h_on_entry,
+                                               percentage_change_1d_on_entry=percentage_change_1d_on_entry,
+                                               percentage_change_7d_on_entry=percentage_change_7d_on_entry,
+                                               strategy_name=strategy_name,
+                                               is_real=is_real)
+        else:
+            # Perform the strategy with actual money
+            # TODO buy and create trade object with real info
+            pass
+
+        repo.add_trade(trade)
+        repo.commit()
+
+
+def close_all_opened_positions():
+    repo = rp.provide_sqlalchemy_repository(real_db=True)
+
+    opened_positions = repo.get_opened_positions()
+
+    for op in opened_positions:
+        close_opened_position(symbol=op.symbol,
+                              vs_currency=op.vs_currency_symbol)
+
+
+if __name__ == "__main__":
+    print("Trying to close opened positions")
+    close_all_opened_positions()
+
+    # Init markets
+    print("Initializing markets")
+    markets = mf.get_pairs_for_exchange_vs_currency(exchange_id='binance',
+                                                    vs_currency='EUR',
+                                                    force=True)
+
+    markets = list(map(
+        lambda x: (x['base'], x['target']),
+        markets
+    ))
+
+    strat = st.FakeStrategy()
+
+    # TODO hacer una función de esto e incluir is_real=True
+    print("Starting main loop")
+    while True:
+        for symbol, vs_currency in markets:
+            print(f"Scanning {symbol}{vs_currency}")
+            close_opened_position(symbol=symbol, vs_currency=vs_currency)
+            repo = rp.provide_sqlalchemy_repository(real_db=True)
+
+            if not repo.get_opened_positions(symbol=symbol, vs_currency=vs_currency):
+                st_entry_timeframe = "5m"
+                df = eh.get_candles_for_strategy(symbol=symbol,
+                                                 vs_currency=vs_currency,
+                                                 timeframe=st_entry_timeframe,
+                                                 num_candles=21)
+
+                current_price = eh.get_current_price(symbol=symbol,
+                                                     vs_currency=vs_currency)
+
+                st_out = strat.perform_strategy(entry_price=current_price, df=df)
+
+                # TODO limitar la cantidad de vs_currency en entrada para poder entrar en varias posiciones al mismo tiempo
+                free_vs_currency = eh.get_free_balance(symbol=vs_currency)
+                vs_currency_on_entry = manage_risk_on_entry(free_vs_currency, st_out)
+
+                amount = vs_currency_on_entry / current_price
+                amount = eh._amount_to_precision(symbol=symbol, vs_currency=vs_currency,
+                                                 amount=amount)
+
+                vs_currency_on_entry = amount * current_price
+
+                fee_factor = eh.get_fee_factor(symbol=symbol, vs_currency=vs_currency)['taker']
+                fee = amount * fee_factor
+                amount = amount * (1 - fee_factor)
+
+                if position_can_be_profitable(exchange_handler=eh, strategy_output=st_out,
+                                              symbol=symbol, vs_currency=vs_currency,
+                                              amount=amount):
+                    enter_position(symbol=symbol, vs_currency=vs_currency,
+                                   timeframe=st_entry_timeframe, stop_loss=st_out.stop_loss,
+                                   entry_price=current_price, take_profit=st_out.take_profit,
+                                   vs_currency_entry=vs_currency_on_entry,
+                                   crypto_quantity_entry=amount,
+                                   entry_fee_vs_currency=fee*current_price, # TODO comprobar * o /?
+                                   position='L', entry_order_exchange_id='SIMULATED',
+                                   percentage_change_1h_on_entry="NO",
+                                   percentage_change_1d_on_entry="NO",
+                                   percentage_change_7d_on_entry="NO",
+                                   strategy_name=strat.strategy_name(),
+                                   is_real=False)
+                    print(f"Entered position for {symbol}{vs_currency}")
+            else:
+                print("Already opened position")
+
+
+            close_all_opened_positions()
+
+        time.sleep(2)
+
+
+

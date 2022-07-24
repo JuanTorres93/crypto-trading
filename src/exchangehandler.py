@@ -153,7 +153,7 @@ class CcxtExchangeHandler(ExchangeHandler):
             amount = self._exchange_api.amount_to_precision(symbol=market,
                                                             amount=amount)
 
-        return amount
+        return float(amount)
 
     def buy_market_order(self, symbol, vs_currency, amount):
         """
