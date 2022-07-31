@@ -15,7 +15,8 @@ def test_service_manages_risk_on_long_position():
     )
 
     enter_vs_currency = services.manage_risk_on_entry(vs_currency_on_entry,
-                                                      st_out)
+                                                      st_out,
+                                                      config.MAX_VS_CURRENCY_TO_USE)
 
     assert enter_vs_currency < vs_currency_on_entry
 

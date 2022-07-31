@@ -78,12 +78,14 @@ def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler,
     return False
 
 
-def manage_risk_on_entry(vs_currency_on_entry, strategy_output):
+def manage_risk_on_entry(vs_currency_on_entry, strategy_output,
+                         max_vs_currency_to_use):
     """
     Applies risk management to the available money. If the initial risk is
     greater than config.MAX_PERCENTAGE_TO_RISK, then it calculates the money that
     must be used to ensure that, at maximum, config.max_percentage_to_use is
     fulfilled.
+    :param max_vs_currency_to_use:
     :param vs_currency_on_entry: quantity of vs_currency to fix
     :param strategy_output: Strategy output
     :return: amount of vs_currency that is going to be used to buy.
@@ -93,10 +95,17 @@ def manage_risk_on_entry(vs_currency_on_entry, strategy_output):
 
     risked_percentage = 100 * abs(entry_price - stop_loss) / entry_price
 
+    # Manage risk
     if risked_percentage <= config.MAX_PERCENTAGE_TO_RISK:
-        return vs_currency_on_entry
+        current_vs_currency_entry = vs_currency_on_entry
     else:
-        return vs_currency_on_entry * config.MAX_PERCENTAGE_TO_RISK / risked_percentage
+        current_vs_currency_entry = vs_currency_on_entry * config.MAX_PERCENTAGE_TO_RISK / risked_percentage
+
+    # Adjust managed risk to maximum desired value
+    if current_vs_currency_entry <= max_vs_currency_to_use:
+        return current_vs_currency_entry
+    else:
+        return max_vs_currency_to_use
 
 
 def close_opened_position(symbol, vs_currency):
@@ -252,9 +261,9 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
                                            ht_df=df_ht)
 
         # TODO limitar la cantidad de vs_currency en entrada para poder entrar en varias posiciones al mismo tiempo
-        # Compute estimated results to check if the position is potentially profitable
         free_vs_currency = eh.get_free_balance(symbol=vs_currency)
-        vs_currency_on_entry = manage_risk_on_entry(free_vs_currency, st_out)
+        vs_currency_on_entry = manage_risk_on_entry(free_vs_currency, st_out,
+                                                    config.MAX_VS_CURRENCY_TO_USE)
 
         amount = vs_currency_on_entry / current_price
         amount = eh._amount_to_precision(symbol=symbol, vs_currency=vs_currency,
@@ -287,7 +296,7 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
         print("Already opened position")
 
 
-def run_bot():
+def run_bot(simulate):
     print("Trying to close opened positions")
     close_all_opened_positions()
 
@@ -319,14 +328,14 @@ def run_bot():
                                               vs_currency=vs_currency,
                                               strategy=strat,
                                               strategy_entry_timeframe="1m",
-                                              is_real=False)
+                                              is_real=not simulate)
 
             close_all_opened_positions()
             time.sleep(2)
 
 
 if __name__ == "__main__":
-    run_bot()
+    run_bot(simulate=True)
 
     # import indicator as ind
     # import matplotlib.pyplot as plt
