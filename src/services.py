@@ -225,80 +225,150 @@ def close_all_opened_positions():
                               vs_currency=op.vs_currency_symbol)
 
 
-if __name__ == "__main__":
+def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
+                                      strategy_entry_timeframe, is_real):
+    print(f"Scanning {symbol}{vs_currency}")
+    close_opened_position(symbol=symbol, vs_currency=vs_currency)
+    repo = rp.provide_sqlalchemy_repository(real_db=True)
+
+    if not repo.get_opened_positions(symbol=symbol, vs_currency=vs_currency):
+        # COMPUTE HERE DF FOR STRATEGIES
+        df_lt = eh.get_candles_for_strategy(symbol=symbol,
+                                         vs_currency=vs_currency,
+                                         timeframe=strategy_entry_timeframe,
+                                         num_candles=2000)
+
+        df_ht = eh.get_candles_for_strategy(symbol=symbol,
+                                            vs_currency=vs_currency,
+                                            timeframe='1h',
+                                            num_candles=2000)
+
+        current_price = eh.get_current_price(symbol=symbol,
+                                             vs_currency=vs_currency)
+
+        # INCLUDE HERE THE DFs FOR STRATEGY
+        st_out = strategy.perform_strategy(entry_price=current_price,
+                                           lt_df=df_lt,
+                                           ht_df=df_ht)
+
+        # TODO limitar la cantidad de vs_currency en entrada para poder entrar en varias posiciones al mismo tiempo
+        # Compute estimated results to check if the position is potentially profitable
+        free_vs_currency = eh.get_free_balance(symbol=vs_currency)
+        vs_currency_on_entry = manage_risk_on_entry(free_vs_currency, st_out)
+
+        amount = vs_currency_on_entry / current_price
+        amount = eh._amount_to_precision(symbol=symbol, vs_currency=vs_currency,
+                                         amount=amount)
+
+        vs_currency_on_entry = amount * current_price
+
+        fee_factor = eh.get_fee_factor(symbol=symbol, vs_currency=vs_currency)['taker']
+        fee = amount * fee_factor
+        amount = amount * (1 - fee_factor)
+
+        if position_can_be_profitable(exchange_handler=eh, strategy_output=st_out,
+                                      symbol=symbol, vs_currency=vs_currency,
+                                      amount=amount):
+            if not is_real:
+                enter_position(symbol=symbol, vs_currency=vs_currency,
+                               timeframe=strategy_entry_timeframe, stop_loss=st_out.stop_loss,
+                               entry_price=current_price, take_profit=st_out.take_profit,
+                               vs_currency_entry=vs_currency_on_entry,
+                               crypto_quantity_entry=amount,
+                               entry_fee_vs_currency=fee*current_price,
+                               position='L', entry_order_exchange_id='SIMULATED',
+                               percentage_change_1h_on_entry="NO",
+                               percentage_change_1d_on_entry="NO",
+                               percentage_change_7d_on_entry="NO",
+                               strategy_name=strategy.strategy_name(),
+                               is_real=is_real)
+                print(f"Entered simulated position for {symbol}{vs_currency}")
+    else:
+        print("Already opened position")
+
+
+def run_bot():
     print("Trying to close opened positions")
     close_all_opened_positions()
 
     # Init markets
+    markets = []
     print("Initializing markets")
-    markets = mf.get_pairs_for_exchange_vs_currency(exchange_id='binance',
-                                                    vs_currency='EUR',
-                                                    force=True)
+    while len(markets) == 0:
+        markets = mf.get_pairs_for_exchange_vs_currency(exchange_id='binance',
+                                                        vs_currency='EUR',
+                                                        force=True)
 
-    markets = list(map(
-        lambda x: (x['base'], x['target']),
-        markets
-    ))
+        markets = list(map(
+            lambda x: (x['base'], x['target']),
+            markets
+        ))
+        print(f"{datetime.now()}: Could not initialize. Trying again in 10s.")
+        time.sleep(10)
 
-    strat = st.FakeStrategy()
+    print(f"markets: {markets}")
 
-    # TODO hacer una función de esto e incluir is_real=True
+    # CHANGE STRATEGY HERE
+    strat = st.SupportAndResistanceHigherTimeframe()
+
     print("Starting main loop")
     while True:
+        print("========== STARTING NEW ITERATION ========== ")
         for symbol, vs_currency in markets:
-            print(f"Scanning {symbol}{vs_currency}")
-            close_opened_position(symbol=symbol, vs_currency=vs_currency)
-            repo = rp.provide_sqlalchemy_repository(real_db=True)
-
-            if not repo.get_opened_positions(symbol=symbol, vs_currency=vs_currency):
-                st_entry_timeframe = "5m"
-                df = eh.get_candles_for_strategy(symbol=symbol,
-                                                 vs_currency=vs_currency,
-                                                 timeframe=st_entry_timeframe,
-                                                 num_candles=21)
-
-                current_price = eh.get_current_price(symbol=symbol,
-                                                     vs_currency=vs_currency)
-
-                st_out = strat.perform_strategy(entry_price=current_price, df=df)
-
-                # TODO limitar la cantidad de vs_currency en entrada para poder entrar en varias posiciones al mismo tiempo
-                free_vs_currency = eh.get_free_balance(symbol=vs_currency)
-                vs_currency_on_entry = manage_risk_on_entry(free_vs_currency, st_out)
-
-                amount = vs_currency_on_entry / current_price
-                amount = eh._amount_to_precision(symbol=symbol, vs_currency=vs_currency,
-                                                 amount=amount)
-
-                vs_currency_on_entry = amount * current_price
-
-                fee_factor = eh.get_fee_factor(symbol=symbol, vs_currency=vs_currency)['taker']
-                fee = amount * fee_factor
-                amount = amount * (1 - fee_factor)
-
-                if position_can_be_profitable(exchange_handler=eh, strategy_output=st_out,
-                                              symbol=symbol, vs_currency=vs_currency,
-                                              amount=amount):
-                    enter_position(symbol=symbol, vs_currency=vs_currency,
-                                   timeframe=st_entry_timeframe, stop_loss=st_out.stop_loss,
-                                   entry_price=current_price, take_profit=st_out.take_profit,
-                                   vs_currency_entry=vs_currency_on_entry,
-                                   crypto_quantity_entry=amount,
-                                   entry_fee_vs_currency=fee*current_price, # TODO comprobar * o /?
-                                   position='L', entry_order_exchange_id='SIMULATED',
-                                   percentage_change_1h_on_entry="NO",
-                                   percentage_change_1d_on_entry="NO",
-                                   percentage_change_7d_on_entry="NO",
-                                   strategy_name=strat.strategy_name(),
-                                   is_real=False)
-                    print(f"Entered position for {symbol}{vs_currency}")
-            else:
-                print("Already opened position")
-
+            compute_strategy_and_try_to_enter(symbol=symbol,
+                                              vs_currency=vs_currency,
+                                              strategy=strat,
+                                              strategy_entry_timeframe="1m",
+                                              is_real=False)
 
             close_all_opened_positions()
+            time.sleep(2)
 
-        time.sleep(2)
 
+if __name__ == "__main__":
+    run_bot()
 
+    # import indicator as ind
+    # import matplotlib.pyplot as plt
+
+    # Init markets
+    # markets = []
+    # print("Initializing markets")
+    # while len(markets) == 0:
+    #     markets = mf.get_pairs_for_exchange_vs_currency(exchange_id='binance',
+    #                                                     vs_currency='EUR',
+    #                                                     force=True)
+    #
+    #     markets = list(map(
+    #         lambda x: (x['base'], x['target']),
+    #         markets
+    #     ))
+    #     print("Could not initialize. Trying again in 10s.")
+    #     time.sleep(10)
+
+    # print(f"markets: {markets}")
+    #
+    # strat = st.SupportAndResistanceHigherTimeframe()
+    #
+    # for symbol, vs in markets:
+    #     df_ht = eh.get_candles_for_strategy(
+    #         symbol=symbol, vs_currency="EUR", timeframe="1h", num_candles=1000
+    #     )
+    #
+    #     df_lt = eh.get_candles_for_strategy(
+    #         symbol=symbol, vs_currency="EUR", timeframe="1m", num_candles=1000
+    #     )
+    #
+    #     f, a = plt.subplots()
+    #     df_lt['close'].plot(ax=a)
+    #
+    #     sup_and_res = ind.support_and_resistance(df_ht)
+    #     a.hlines(sup_and_res['base_line'], 0, 1000, 'r', '--', linewidth=1)
+    #     a.hlines(sup_and_res['upper_line'], 0, 1000, 'r', '-', linewidth=2)
+    #     a.hlines(sup_and_res['lower_line'], 0, 1000, 'r', '-', linewidth=2)
+    #
+    #     out = strat.perform_strategy(list(df_lt['close'])[-1], ht_df=df_ht,
+    #                                  lt_df=df_lt)
+    #
+    #     plt.show()
 

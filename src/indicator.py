@@ -253,3 +253,22 @@ def super_trend(df: pd.DataFrame, atr_period: int, multiplier: float):
         'lowerband': final_lowerband,
         'upperband': final_upperband
     }, index=df.index)
+
+
+def support_and_resistance(df: pd.DataFrame, margin = .002):
+    """
+    It is ideal to get the maximum number of candles in the df
+    :param df:
+    :param margin:
+    :return:
+    """
+    lows = get_local_minimums(df['low'], 2)
+    count, division = np.histogram(lows)
+    division = np.array(division)
+
+    return {
+        'base_line': division,
+        'upper_line': division * (1 + margin),
+        'lower_line': division * (1 - margin)
+    }
+
