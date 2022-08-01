@@ -46,13 +46,11 @@ def format_date_for_database(datetime_obj):
 
 def create_initial_trade(symbol, vs_currency_symbol, timeframe, stop_loss,
                          entry_price, take_profit, vs_currency_entry,
-                         crypto_quantity_entry, entry_fee_vs_currency,
-                         position, entry_order_exchange_id,
-                         percentage_change_1h_on_entry,
+                         crypto_quantity_entry, entry_fee_vs_currency, position,
+                         entry_order_exchange_id, percentage_change_1h_on_entry,
                          percentage_change_1d_on_entry,
                          percentage_change_7d_on_entry, strategy_name, is_real,
-                         entry_date=format_date_for_database(datetime.now()),
-                         status=TradeStatus.OPENED):
+                         entry_date, status=TradeStatus.OPENED):
     """
     :return: Trade object with the initial information for a trade
     """

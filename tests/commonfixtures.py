@@ -44,17 +44,19 @@ def create_trade(symbol="BTC", vs_currency_symbol="EUR", timeframe='5m',
 
 @pytest.fixture
 def generic_trade_defaults():
-    return model.create_initial_trade(symbol="BTC", vs_currency_symbol="EUR", timeframe='5m',
-                       stop_loss=1, entry_price=2, take_profit=3,
-                       status=model.TradeStatus.OPENED, vs_currency_entry=20,
-                       crypto_quantity_entry=1.0, entry_fee_vs_currency=.2,
-                       position='L',
-                       entry_date='2022-06-18 12:13:40',
-                       entry_order_exchange_id='entry_id',
-                       percentage_change_1d_on_entry='2',
-                       percentage_change_7d_on_entry='2',
-                       percentage_change_1h_on_entry='2', strategy_name='test',
-                       is_real=False)
+    return model.create_initial_trade(symbol="BTC", vs_currency_symbol="EUR",
+                                      timeframe='5m', stop_loss=1,
+                                      entry_price=2, take_profit=3,
+                                      vs_currency_entry=20,
+                                      crypto_quantity_entry=1.0,
+                                      entry_fee_vs_currency=.2, position='L',
+                                      entry_order_exchange_id='entry_id',
+                                      percentage_change_1h_on_entry='2',
+                                      percentage_change_1d_on_entry='2',
+                                      percentage_change_7d_on_entry='2',
+                                      strategy_name='test', is_real=False,
+                                      entry_date='2022-06-18 12:13:40',
+                                      status=model.TradeStatus.OPENED)
 
 
 @pytest.fixture

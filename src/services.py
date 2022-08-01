@@ -214,7 +214,9 @@ def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
                                                percentage_change_1d_on_entry=percentage_change_1d_on_entry,
                                                percentage_change_7d_on_entry=percentage_change_7d_on_entry,
                                                strategy_name=strategy_name,
-                                               is_real=is_real)
+                                               is_real=is_real,
+                                               entry_date=model.format_date_for_database(
+                                                   datetime.now()))
         else:
             # Perform the strategy with actual money
             # TODO buy and create trade object with real info
