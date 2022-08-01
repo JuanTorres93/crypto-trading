@@ -320,7 +320,7 @@ def run_bot(simulate):
     print(f"markets: {markets}")
 
     # CHANGE STRATEGY HERE
-    strat = st.SupportAndResistanceHigherTimeframe()
+    strat = st.SupportAndResistanceHigherTimeframeBullishDivergence()
 
     print("Starting main loop")
     while True:
