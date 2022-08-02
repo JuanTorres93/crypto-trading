@@ -6,6 +6,7 @@ SELECT
 	   sum(vs_currency_result_no_fees) - sum(entry_fee_vs_currency) - sum(exit_fee_vs_currency) as "WITH Commissions"
 FROM trade
 WHERE status IS NOT "opened"
+AND strategy_name IS "support_and_resistance_higher_timeframe_bullish_divergence"
 GROUP BY symbol, 
 status
 UNION ALL
@@ -17,3 +18,4 @@ SELECT
 	sum(vs_currency_result_no_fees) - sum(entry_fee_vs_currency) - sum(exit_fee_vs_currency) as "WITH Commissions"
 FROM trade
 WHERE status IS NOT "opened"
+AND strategy_name IS "support_and_resistance_higher_timeframe_bullish_divergence"

@@ -155,7 +155,14 @@ class SupportAndResistanceHigherTimeframeBullishDivergence(Strategy):
                                                  candle_body_high_series=ht_df['candle_body_high'],
                                                  indicator_low_series=rsi_ht)
 
-        exists_hidden_bull_div_ht = True in list(bull_div_ht[-101:-1])
+        # Checks the indexes where divergence exists. Most recent indexes are the
+        # highest. Filter to get the last 100 candles divergence
+        exists_hidden_bull_div_ht = len(
+            list(filter(
+                lambda x: x >= 898,
+                list(bull_div_ht.index)
+            ))
+        ) > 0
 
         total_levels = len(sr_ht_low)
 
