@@ -247,6 +247,7 @@ class CcxtExchangeHandler(ExchangeHandler):
             'max_qty': float(market['limits']['amount']['max']),
             'order_types': market['info']['orderTypes'],
             'oco_allowed': market['info']['ocoAllowed'],
+            'min_vs_currency': market['limits']['cost']['min'], # Minimum quantity of vs_currency
         }
 
     def get_candles_for_strategy(self, symbol, vs_currency, timeframe, num_candles,
@@ -336,7 +337,7 @@ if __name__ == '__main__':
             'enableLimitRate': True,
         }
     ))
-    borrar = bin_eh.get_free_balance('BTC')
+    borrar = bin_eh.fetch_market('ADA', 'EUR')
     pass
 
 

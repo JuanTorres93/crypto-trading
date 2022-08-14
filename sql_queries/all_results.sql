@@ -7,7 +7,9 @@ SELECT
 FROM trade
 WHERE status IS NOT "opened"
 AND strategy_name IS "support_and_resistance_higher_timeframe_bullish_divergence"
-GROUP BY symbol, 
+--AND id <= 463
+AND id > 463
+GROUP BY --symbol, 
 status
 UNION ALL
 SELECT
@@ -19,3 +21,7 @@ SELECT
 FROM trade
 WHERE status IS NOT "opened"
 AND strategy_name IS "support_and_resistance_higher_timeframe_bullish_divergence"
+--AND id <= 463
+AND id > 463
+
+-- hasta 463 con 100 barras para divergencia

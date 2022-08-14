@@ -132,7 +132,7 @@ def test_binance_ccxt_exchange_handler_fetches_market(binance_eh):
     assert type(market_info) is dict
 
     expected_keys = {'min_price', 'max_price', 'min_qty', 'max_qty',
-                     'order_types', 'oco_allowed'}
+                     'order_types', 'oco_allowed', 'min_vs_currency'}
     actual_keys = set(market_info.keys())
 
     assert expected_keys.issubset(actual_keys)

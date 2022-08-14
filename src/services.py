@@ -147,6 +147,8 @@ def close_opened_position(symbol, vs_currency):
         else:
             return
 
+        exit_date = model.format_date_for_database(datetime.now())
+
         if not opened_trade.is_real:
             # Simulate strategy in real time
 
@@ -154,19 +156,28 @@ def close_opened_position(symbol, vs_currency):
                                            vs_currency=vs_currency)['taker']
             # Estimation of crypto quantity on exit. Susceptible of being changed
             crypto_quantity_exit = opened_trade.crypto_quantity_entry * (1- fee_factor)
-            exit_date = model.format_date_for_database(datetime.now())
 
             vs_currency_exit = exit_price * crypto_quantity_exit
             exit_fee_vs_currency = vs_currency_exit * fee_factor
             vs_currency_result_no_fees = vs_currency_exit - opened_trade.vs_currency_entry
-
             result = vs_currency_result_no_fees - opened_trade.entry_fee_vs_currency - exit_fee_vs_currency
-
             status = model.TradeStatus.WON if result > 0 else model.TradeStatus.LOST
 
         else:
             # Perform the strategy with actual money
-            pass
+            amount = opened_trade.crypto_quantity_entry
+            sell_order = eh.sell_market_order_diminishing_amount(symbol=symbol,
+                                                                 vs_currency=vs_currency,
+                                                                 amount=amount)
+            crypto_quantity_exit = sell_order['amount']
+            exit_price = sell_order['price']
+            exit_fee_vs_currency = sell_order['fee_in_asset']
+            vs_currency_exit = sell_order['cost']
+
+            # In the real trade commissions are already considered in return exchange information
+            vs_currency_result_no_fees = vs_currency_exit - opened_trade.vs_currency_entry + opened_trade.entry_fee_vs_currency + exit_fee_vs_currency
+            result = vs_currency_result_no_fees - opened_trade.entry_fee_vs_currency - exit_fee_vs_currency
+            status = model.TradeStatus.WON if result > 0 else model.TradeStatus.LOST
 
         model.complete_trade_with_market_sell_info(trade=opened_trade,
                                                    vs_currency_result_no_fees=vs_currency_result_no_fees,
@@ -175,6 +186,8 @@ def close_opened_position(symbol, vs_currency):
                                                    exit_date=exit_date,
                                                    status=status)
         repo.commit()
+        print(f"{model.format_date_for_database(datetime.now())} closed position for {symbol}")
+        # raise Exception(f"BORRAR ESTE RAISE DEL CÓDIGO. SÓLO ESTÁ PARA QUE NO SE ENTRE EN NUEVAS POSICIONES REALES")
 
 
 def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
@@ -198,7 +211,6 @@ def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
     if not opened_trade:
         if not is_real:
             # Simulate strategy in real time
-
             trade = model.create_initial_trade(symbol=symbol,
                                                vs_currency_symbol=vs_currency,
                                                timeframe=timeframe,
@@ -217,10 +229,47 @@ def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
                                                is_real=is_real,
                                                entry_date=model.format_date_for_database(
                                                    datetime.now()))
+            print(f"Entered simulated position for {symbol}{vs_currency}")
         else:
-            # Perform the strategy with actual money
-            # TODO buy and create trade object with real info
-            pass
+            # Check if bought quantity would be enough
+            market_info = eh.fetch_market(symbol=symbol, vs_currency=vs_currency)
+            min_vs_currency_to_enter_market = market_info['min_vs_currency']
+
+            if vs_currency_entry > min_vs_currency_to_enter_market:
+                # Perform the strategy with actual money
+                print(f"Trying to buy: {crypto_quantity_entry} {symbol}", end=" ")
+                print(f"with {vs_currency_entry} {vs_currency}")
+                buy_order = eh.buy_market_order(symbol=symbol,
+                                                vs_currency=vs_currency,
+                                                amount=crypto_quantity_entry)
+
+                vs_currency_entry = buy_order['cost']
+                crypto_quantity_entry = buy_order['amount']
+                entry_price = buy_order['price']
+                entry_fee_vs_currency = entry_price * buy_order['fee_in_asset']
+                entry_order_exchange_id = 'exchange_id'
+
+                trade = model.create_initial_trade(symbol=symbol,
+                                                   vs_currency_symbol=vs_currency,
+                                                   timeframe=timeframe,
+                                                   stop_loss=stop_loss,
+                                                   entry_price=entry_price,
+                                                   take_profit=take_profit,
+                                                   vs_currency_entry=vs_currency_entry,
+                                                   crypto_quantity_entry=crypto_quantity_entry,
+                                                   entry_fee_vs_currency=entry_fee_vs_currency,
+                                                   position=position,
+                                                   entry_order_exchange_id=entry_order_exchange_id,
+                                                   percentage_change_1h_on_entry=percentage_change_1h_on_entry,
+                                                   percentage_change_1d_on_entry=percentage_change_1d_on_entry,
+                                                   percentage_change_7d_on_entry=percentage_change_7d_on_entry,
+                                                   strategy_name=strategy_name,
+                                                   is_real=is_real,
+                                                   entry_date=model.format_date_for_database(
+                                                       datetime.now()))
+                print(f"Entered real position for {symbol}{vs_currency}")
+            else:
+                return
 
         repo.add_trade(trade)
         repo.commit()
@@ -243,7 +292,7 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
     repo = rp.provide_sqlalchemy_repository(real_db=True)
 
     if not repo.get_opened_positions(symbol=symbol, vs_currency=vs_currency):
-        # COMPUTE HERE DF FOR STRATEGIES
+        # # COMPUTE HERE DF FOR STRATEGIES
         df_lt = eh.get_candles_for_strategy(symbol=symbol,
                                          vs_currency=vs_currency,
                                          timeframe=strategy_entry_timeframe,
@@ -262,7 +311,7 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
                                            lt_df=df_lt,
                                            ht_df=df_ht)
 
-        # TODO limitar la cantidad de vs_currency en entrada para poder entrar en varias posiciones al mismo tiempo
+
         free_vs_currency = eh.get_free_balance(symbol=vs_currency)
         vs_currency_on_entry = manage_risk_on_entry(free_vs_currency, st_out,
                                                     config.MAX_VS_CURRENCY_TO_USE)
@@ -293,7 +342,19 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
                                percentage_change_7d_on_entry="NO",
                                strategy_name=strategy.strategy_name(),
                                is_real=is_real)
-                print(f"Entered simulated position for {symbol}{vs_currency}")
+            else:
+                enter_position(symbol=symbol, vs_currency=vs_currency,
+                               timeframe=strategy_entry_timeframe, stop_loss=st_out.stop_loss,
+                               entry_price=current_price, take_profit=st_out.take_profit,
+                               vs_currency_entry=vs_currency_on_entry,
+                               crypto_quantity_entry=amount,
+                               entry_fee_vs_currency=fee*current_price,
+                               position='L', entry_order_exchange_id='NOT SIMULATED',
+                               percentage_change_1h_on_entry="NO",
+                               percentage_change_1d_on_entry="NO",
+                               percentage_change_7d_on_entry="NO",
+                               strategy_name=strategy.strategy_name(),
+                               is_real=is_real)
     else:
         print("Already opened position")
 
@@ -314,8 +375,8 @@ def run_bot(simulate):
             lambda x: (x['base'], x['target']),
             markets
         ))
-        print(f"{datetime.now()}: Could not initialize. Trying again in 10s.")
-        time.sleep(10)
+        print(f"{datetime.now()}: Could not initialize. Trying again in 70s.")
+        time.sleep(70)
 
     print(f"markets: {markets}")
 
@@ -337,7 +398,7 @@ def run_bot(simulate):
 
 
 if __name__ == "__main__":
-    run_bot(simulate=True)
+    run_bot(simulate=False)
 
     # import indicator as ind
     # import matplotlib.pyplot as plt
