@@ -156,7 +156,7 @@ class SupportAndResistanceHigherTimeframeBullishDivergence(Strategy):
                                                  indicator_low_series=rsi_ht)
         ht_ema = ind.get_ema(ht_df, period=200)
         # Two last candles above higher timeframe ema?
-        closes_above_ema = (ht_df['close'] > ht_ema).iloc[-2:] == [True, True]
+        closes_above_ema = (ht_df['close'] > ht_ema).iloc[-2:].all()
 
         # Checks the indexes where divergence exists. Most recent indexes are the
         # highest. Filter to get the last 100 candles divergence
