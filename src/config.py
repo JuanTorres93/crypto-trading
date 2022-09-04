@@ -3,3 +3,5 @@ BINANCE_SECRET_KEY = 'binance_secret_key'
 
 MAX_PERCENTAGE_TO_RISK = 2
 MAX_VS_CURRENCY_TO_USE = 13
+
+FILE_NAME_TO_CLOSE_BOT = "close_bot"

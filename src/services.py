@@ -1,3 +1,4 @@
+import os.path
 from datetime import datetime
 import time
 
@@ -5,6 +6,7 @@ import ccxt
 
 import config
 import exchangehandler as ex_han
+import filesystemutils as fs
 import marketfinder as mar_fin
 import model
 import repository as rp
@@ -22,6 +24,14 @@ eh = ex_han.BinanceCcxtExchangeHandler(
 )
 
 mf = mar_fin.CoinGeckoMarketFinder()
+
+
+def shut_down_bot():
+    home = fs.home_directory(True)
+    path_to_file = os.path.join(home, config.FILE_NAME_TO_CLOSE_BOT)
+    if fs.path_exists(path_to_file):
+        print("Shuting down bot.")
+        exit()
 
 
 def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler,
@@ -362,6 +372,7 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
 def run_bot(simulate):
     print("Trying to close opened positions")
     close_all_opened_positions()
+    shut_down_bot()
 
     # Init markets
     markets = []
@@ -394,6 +405,7 @@ def run_bot(simulate):
                                               is_real=not simulate)
 
             close_all_opened_positions()
+            shut_down_bot()
             time.sleep(2)
 
 
