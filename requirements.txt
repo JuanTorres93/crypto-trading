@@ -1,4 +1,6 @@
 ccxt
+matplotlib
+mplfinance
 numpy
 pandas
 pycoingecko
