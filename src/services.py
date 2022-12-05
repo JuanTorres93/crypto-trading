@@ -410,7 +410,7 @@ def run_bot(simulate):
 
 
 if __name__ == "__main__":
-    run_bot(simulate=False)
+    run_bot(simulate=True)
 
     # import indicator as ind
     # import matplotlib.pyplot as plt

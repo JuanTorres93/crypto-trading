@@ -272,3 +272,16 @@ def support_and_resistance(df: pd.DataFrame, margin = .002):
         'lower_line': division * (1 - margin)
     }
 
+
+def trade_pro_rejection_zone(df: pd.DataFrame):
+    ema_20 = get_ema(df=df, period=20)
+    ema_50 = get_ema(df=df, period=50)
+
+    cloud_is_green = ema_20.iloc[-1] > ema_50.iloc[-1]
+
+    return {
+        'ema_short': ema_20,
+        'ema_long': ema_50,
+        'cloud_is_green': cloud_is_green,
+    }
+
