@@ -4,6 +4,7 @@ import time
 
 import ccxt
 
+import commonutils as cu
 import config
 import exchangehandler as ex_han
 import filesystemutils as fs
@@ -30,7 +31,7 @@ def shut_down_bot():
     home = fs.home_directory(True)
     path_to_file = os.path.join(home, config.FILE_NAME_TO_CLOSE_BOT)
     if fs.path_exists(path_to_file):
-        print("Shuting down bot.")
+        cu.log("Shuting down bot.")
         exit()
 
 
@@ -196,7 +197,7 @@ def close_opened_position(symbol, vs_currency):
                                                    exit_date=exit_date,
                                                    status=status)
         repo.commit()
-        print(f"{model.format_date_for_database(datetime.now())} closed position for {symbol}")
+        cu.log(f"{model.format_date_for_database(datetime.now())} closed position for {symbol}")
         # raise Exception(f"BORRAR ESTE RAISE DEL CÓDIGO. SÓLO ESTÁ PARA QUE NO SE ENTRE EN NUEVAS POSICIONES REALES")
 
 
@@ -239,7 +240,7 @@ def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
                                                is_real=is_real,
                                                entry_date=model.format_date_for_database(
                                                    datetime.now()))
-            print(f"Entered simulated position for {symbol}{vs_currency}")
+            cu.log(f"Entered simulated position for {symbol}{vs_currency}")
         else:
             # Check if bought quantity would be enough
             market_info = eh.fetch_market(symbol=symbol, vs_currency=vs_currency)
@@ -247,8 +248,8 @@ def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
 
             if vs_currency_entry > min_vs_currency_to_enter_market:
                 # Perform the strategy with actual money
-                print(f"Trying to buy: {crypto_quantity_entry} {symbol}", end=" ")
-                print(f"with {vs_currency_entry} {vs_currency}")
+                cu.log(f"Trying to buy: {crypto_quantity_entry} {symbol}", end=" ")
+                cu.log(f"with {vs_currency_entry} {vs_currency}")
                 buy_order = eh.buy_market_order(symbol=symbol,
                                                 vs_currency=vs_currency,
                                                 amount=crypto_quantity_entry)
@@ -277,7 +278,7 @@ def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
                                                    is_real=is_real,
                                                    entry_date=model.format_date_for_database(
                                                        datetime.now()))
-                print(f"Entered real position for {symbol}{vs_currency}")
+                cu.log(f"Entered real position for {symbol}{vs_currency}")
             else:
                 return
 
@@ -297,7 +298,7 @@ def close_all_opened_positions():
 
 def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
                                       strategy_entry_timeframe, is_real):
-    print(f"Scanning {symbol}{vs_currency}")
+    cu.log(f"Scanning {symbol}{vs_currency}")
     close_opened_position(symbol=symbol, vs_currency=vs_currency)
     repo = rp.provide_sqlalchemy_repository(real_db=True)
 
@@ -366,17 +367,17 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
                                strategy_name=strategy.strategy_name(),
                                is_real=is_real)
     else:
-        print("Already opened position")
+        cu.log("Already opened position")
 
 
 def run_bot(simulate):
-    print("Trying to close opened positions")
+    cu.log("Trying to close opened positions")
     close_all_opened_positions()
     shut_down_bot()
 
     # Init markets
     markets = []
-    print("Initializing markets")
+    cu.log("Initializing markets")
     while len(markets) == 0:
         markets = mf.get_pairs_for_exchange_vs_currency(exchange_id='binance',
                                                         vs_currency='EUR',
@@ -386,17 +387,17 @@ def run_bot(simulate):
             lambda x: (x['base'], x['target']),
             markets
         ))
-        print(f"{datetime.now()}: Could not initialize. Trying again in 70s.")
+        cu.log(f"{datetime.now()}: Could not initialize. Trying again in 70s.")
         time.sleep(70)
 
-    print(f"markets: {markets}")
+    cu.log(f"markets: {markets}")
 
     # CHANGE STRATEGY HERE
     strat = st.SupportAndResistanceHigherTimeframeBullishDivergence()
 
-    print("Starting main loop")
+    cu.log("Starting main loop")
     while True:
-        print("========== STARTING NEW ITERATION ========== ")
+        cu.log("========== STARTING NEW ITERATION ========== ")
         for symbol, vs_currency in markets:
             compute_strategy_and_try_to_enter(symbol=symbol,
                                               vs_currency=vs_currency,
@@ -410,14 +411,17 @@ def run_bot(simulate):
 
 
 if __name__ == "__main__":
-    run_bot(simulate=True)
+    try:
+        run_bot(simulate=False)
+    except Exception:
+        cu.log_traceback()
 
     # import indicator as ind
     # import matplotlib.pyplot as plt
 
     # Init markets
     # markets = []
-    # print("Initializing markets")
+    # cu.log("Initializing markets")
     # while len(markets) == 0:
     #     markets = mf.get_pairs_for_exchange_vs_currency(exchange_id='binance',
     #                                                     vs_currency='EUR',
@@ -427,10 +431,10 @@ if __name__ == "__main__":
     #         lambda x: (x['base'], x['target']),
     #         markets
     #     ))
-    #     print("Could not initialize. Trying again in 10s.")
+    #     cu.log("Could not initialize. Trying again in 10s.")
     #     time.sleep(10)
 
-    # print(f"markets: {markets}")
+    # cu.log(f"markets: {markets}")
     #
     # strat = st.SupportAndResistanceHigherTimeframe()
     #
