@@ -253,6 +253,12 @@ def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
                                                 vs_currency=vs_currency,
                                                 amount=crypto_quantity_entry)
 
+                if buy_order is None:
+                    # Log that order could not be placed and go on searching for trades
+                    cu.log("Couldn't perform the buy order")
+                    return
+
+
                 vs_currency_entry = buy_order['cost']
                 crypto_quantity_entry = buy_order['amount']
                 entry_price = buy_order['price']

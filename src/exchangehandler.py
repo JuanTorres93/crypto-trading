@@ -165,11 +165,15 @@ class CcxtExchangeHandler(ExchangeHandler):
                                            vs_currency=vs_currency,
                                            amount=amount)
 
-        # Execute buy order
-        buy_order = self._exchange_api.create_order(symbol=market,
-                                                    type='market',
-                                                    side='buy',
-                                                    amount=amount)
+        try:
+            # Try to execute buy order
+            buy_order = self._exchange_api.create_order(symbol=market,
+                                                        type='market',
+                                                        side='buy',
+                                                        amount=amount)
+        except ccxt.errors.InvalidOrder as e:
+            # If it is not possible, do nothing more
+            return None
 
         order_info = {
             "exchange_id": buy_order['id'],
