@@ -301,6 +301,47 @@ def close_all_opened_positions():
                               vs_currency=op.vs_currency_symbol)
 
 
+def set_stop_loss_to_break_even_in_opened_position(symbol, vs_currency):
+    """
+    NOT TESTED METHOD
+    :param symbol:
+    :param vs_currency:
+    :return:
+    """
+    repo = rp.provide_sqlalchemy_repository(real_db=True)
+
+    opened_trade = repo.get_opened_positions(symbol=symbol,
+                                             vs_currency=vs_currency)
+
+    if opened_trade:
+        opened_trade = opened_trade[0]
+        repo.modify_stop_loss(id=opened_trade.id,
+                              new_stop_loss=opened_trade.entry_price)
+
+
+def check_every_opened_trade_for_break_even():
+    """
+    If the current price has surpassed the half of the take profit territory, then
+    modify the stop loss to break even
+    :return:
+    """
+    repo = rp.provide_sqlalchemy_repository(real_db=True)
+
+    opened_positions = repo.get_opened_positions()
+
+    for op in opened_positions:
+        current_price = eh.get_current_price(symbol=op.symbol,
+                                             vs_currency=op.vs_currency_symbol)
+        entry_price = op.entry_price
+        take_profit = op.take_profit
+
+        mid_take_profit = entry_price + (take_profit - entry_price) / 2
+
+        if current_price >= mid_take_profit:
+            set_stop_loss_to_break_even_in_opened_position(symbol=op.symbol,
+                                                           vs_currency=op.vs_currency_symbol)
+
+
 def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
                                       strategy_entry_timeframe, is_real):
     cu.log(f"Scanning {symbol}{vs_currency}")
@@ -377,6 +418,7 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
 
 def run_bot(simulate):
     cu.log("Trying to close opened positions")
+    check_every_opened_trade_for_break_even()
     close_all_opened_positions()
     shut_down_bot()
 
@@ -410,6 +452,7 @@ def run_bot(simulate):
                                               strategy_entry_timeframe="1m",
                                               is_real=not simulate)
 
+            check_every_opened_trade_for_break_even()
             close_all_opened_positions()
             shut_down_bot()
             time.sleep(2)

@@ -45,6 +45,16 @@ class AbstractRepository(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def modify_stop_loss(self, id, new_stop_loss):
+        """
+        Modifies the stop loss of the given trade (id)
+        :param id: id in local database of the trade to modify
+        :param new_stop_loss: new value of the stop loss
+        :return:
+        """
+        raise NotImplementedError
+
 
 class SqlAlchemyRepository(AbstractRepository):
     def add_trade(self, trade):
@@ -85,6 +95,11 @@ class SqlAlchemyRepository(AbstractRepository):
                     model.Trade.vs_currency_symbol == vs_currency,
                 )
             ).all()
+
+    def modify_stop_loss(self, id, new_stop_loss):
+        trade = self.get_trade(id)
+        trade.modified_stop_loss = new_stop_loss
+        self.commit()
 
 
 def provide_sqlalchemy_repository(real_db):
