@@ -4,6 +4,8 @@ import ccxt
 import numpy as np
 import pandas as pd
 
+import commonutils as cu
+
 
 class ExchangeHandler(ABC):
     def __init__(self, exchange_api):
@@ -175,13 +177,19 @@ class CcxtExchangeHandler(ExchangeHandler):
             # If it is not possible, do nothing more
             return None
 
+        try:
+            fee_in_asset = buy_order['fee']['cost']
+        except TypeError:
+            cu.log('Could not find fee in buy order. Assuming zero.')
+            fee_in_asset = 0
+
         order_info = {
             "exchange_id": buy_order['id'],
             "timestamp": buy_order['timestamp'],
             "price": buy_order['price'],
             "amount": buy_order['amount'],
             "cost": buy_order['cost'],
-            "fee_in_asset": buy_order['fee']['cost'],
+            "fee_in_asset": fee_in_asset,
         }
 
         return order_info
