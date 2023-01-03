@@ -459,10 +459,15 @@ def run_bot(simulate):
 
 
 if __name__ == "__main__":
-    try:
-        run_bot(simulate=False)
-    except Exception:
-        cu.log_traceback()
+    while True:
+        try:
+            run_bot(simulate=False)
+        except ccxt.errors.RequestTimeout:
+            cu.log(f"ccxt.errors.RequestTimeout raised. Sleeping for 600 seconds and trying again")
+            time.sleep(600)
+        except Exception:
+            cu.log_traceback()
+            raise Exception("Bot stopped")
 
     # import indicator as ind
     # import matplotlib.pyplot as plt
