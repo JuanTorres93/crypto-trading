@@ -434,8 +434,9 @@ def run_bot(simulate):
             lambda x: (x['base'], x['target']),
             markets
         ))
-        cu.log(f"{datetime.now()}: Could not initialize. Trying again in 70s.")
-        time.sleep(70)
+        if len(markets) == 0:
+            cu.log(f"{datetime.now()}: Could not initialize. Trying again in 70s.")
+            time.sleep(70)
 
     cu.log(f"markets: {markets}")
 
@@ -449,7 +450,7 @@ def run_bot(simulate):
             compute_strategy_and_try_to_enter(symbol=symbol,
                                               vs_currency=vs_currency,
                                               strategy=strat,
-                                              strategy_entry_timeframe="1m",
+                                              strategy_entry_timeframe="5m",
                                               is_real=not simulate)
 
             check_every_opened_trade_for_break_even()
