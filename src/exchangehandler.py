@@ -283,7 +283,6 @@ class CcxtExchangeHandler(ExchangeHandler):
         market = self._market_from_symbol_and_vs_currency(symbol, vs_currency)
 
         # Get candles open, high, low, close, volume information
-        num_candles = str(num_candles)
         candles_list = self._exchange_api.fetch_ohlcv(symbol=market, timeframe=timeframe,
                                                       limit=num_candles, since=since)
 
