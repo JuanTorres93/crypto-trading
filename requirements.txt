@@ -5,6 +5,7 @@ numpy
 pandas
 pycoingecko
 requests
+schedule
 scipy
 SQLAlchemy
 ta

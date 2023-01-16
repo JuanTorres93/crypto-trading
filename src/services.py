@@ -1,8 +1,9 @@
 import os.path
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 
 import ccxt
+import schedule
 
 import commonutils as cu
 import config
@@ -417,6 +418,18 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
         cu.log("Already opened position")
 
 
+def notify_results_for_previous_day():
+    repo = rp.provide_sqlalchemy_repository(True)
+    today = datetime.today()
+    yesterday = today - timedelta(days=1)
+    results = repo.get_results_for_day_month_day(yesterday.day, yesterday.month,
+                                                 yesterday.year)
+    externalnotifier.externally_notify(f"=========={yesterday.day}/{yesterday.month}/{yesterday.year}==========")
+    for r in results:
+        msg = f"{r[0]} | {r[1]} posiciones | {r[2]:.2f} €"
+        externalnotifier.externally_notify(msg)
+
+
 def run_bot(simulate):
     externalnotifier.externally_notify("Bot iniciado")
     cu.log("Trying to close opened positions")
@@ -459,10 +472,13 @@ def run_bot(simulate):
             check_every_opened_trade_for_break_even()
             close_all_opened_positions()
             shut_down_bot()
+            schedule.run_pending()
             time.sleep(2)
 
 
 if __name__ == "__main__":
+    schedule.every().day.at("08:00").do(notify_results_for_previous_day)
+
     while True:
         try:
             run_bot(simulate=False)
@@ -473,48 +489,4 @@ if __name__ == "__main__":
             cu.log_traceback()
             externalnotifier.externally_notify("El bot ha parado debido a una excepción")
             raise Exception("Bot stopped")
-
-    # import indicator as ind
-    # import matplotlib.pyplot as plt
-
-    # Init markets
-    # markets = []
-    # cu.log("Initializing markets")
-    # while len(markets) == 0:
-    #     markets = mf.get_pairs_for_exchange_vs_currency(exchange_id='binance',
-    #                                                     vs_currency='EUR',
-    #                                                     force=True)
-    #
-    #     markets = list(map(
-    #         lambda x: (x['base'], x['target']),
-    #         markets
-    #     ))
-    #     cu.log("Could not initialize. Trying again in 10s.")
-    #     time.sleep(10)
-
-    # cu.log(f"markets: {markets}")
-    #
-    # strat = st.SupportAndResistanceHigherTimeframe()
-    #
-    # for symbol, vs in markets:
-    #     df_ht = eh.get_candles_for_strategy(
-    #         symbol=symbol, vs_currency="EUR", timeframe="1h", num_candles=1000
-    #     )
-    #
-    #     df_lt = eh.get_candles_for_strategy(
-    #         symbol=symbol, vs_currency="EUR", timeframe="1m", num_candles=1000
-    #     )
-    #
-    #     f, a = plt.subplots()
-    #     df_lt['close'].plot(ax=a)
-    #
-    #     sup_and_res = ind.support_and_resistance(df_ht)
-    #     a.hlines(sup_and_res['base_line'], 0, 1000, 'r', '--', linewidth=1)
-    #     a.hlines(sup_and_res['upper_line'], 0, 1000, 'r', '-', linewidth=2)
-    #     a.hlines(sup_and_res['lower_line'], 0, 1000, 'r', '-', linewidth=2)
-    #
-    #     out = strat.perform_strategy(list(df_lt['close'])[-1], ht_df=df_ht,
-    #                                  lt_df=df_lt)
-    #
-    #     plt.show()
 

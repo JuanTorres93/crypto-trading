@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from sqlalchemy import and_
+from sqlalchemy import and_, text
 from sqlalchemy.orm import Session
 
 import model
@@ -101,6 +101,41 @@ class SqlAlchemyRepository(AbstractRepository):
         trade.modified_stop_loss = new_stop_loss
         self.commit()
 
+    def get_results_for_day_month_day(self, day, month, year):
+        # TODO incluir en diagrama UML
+        day = str(day).zfill(2)
+        month = str(month).zfill(2)
+        year = str(year)
+
+        query = f"""
+        SELECT
+	    status as "Result",
+	    count(status) as "Count",
+	    sum(vs_currency_result_no_fees) - sum(entry_fee_vs_currency) - sum(exit_fee_vs_currency) as "WITH Commissions"
+        FROM trade
+        WHERE
+        strategy_name IS "support_and_resistance_higher_timeframe_bullish_divergence"
+        AND is_real IS TRUE
+        AND entry_date LIKE '{day}/{month}/{year} %:%:%'	-- CAMBIAR ABAJO TAMBIÉN 'DD/MM/YYYY %:%:%'
+        GROUP BY status
+        UNION ALL
+        SELECT
+        	"TOTAL",
+        	count(status) as "Count",
+        	sum(vs_currency_result_no_fees) - sum(entry_fee_vs_currency) - sum(exit_fee_vs_currency) as "WITH Commissions"
+        FROM trade
+        WHERE 
+        strategy_name IS "support_and_resistance_higher_timeframe_bullish_divergence"
+        AND is_real IS TRUE
+        AND entry_date LIKE '{day}/{month}/{year} %:%:%'	-- CAMBIAR ARRIBA TAMBIÉN 'DD/MM/YYYY %:%:%'
+        ;
+        """
+        conn = self._session.connection()
+        results = conn.execute(text(query))
+
+        return results
+
+
 
 def provide_sqlalchemy_repository(real_db):
     """
@@ -118,4 +153,6 @@ def provide_sqlalchemy_repository(real_db):
         )
 
 if __name__ == "__main__":
-    pass
+    repo = provide_sqlalchemy_repository(True)
+
+    repo.get_results_for_day_month_day(15, 1, 2023)
