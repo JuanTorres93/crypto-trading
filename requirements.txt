@@ -4,6 +4,7 @@ mplfinance
 numpy
 pandas
 pycoingecko
+requests
 scipy
 SQLAlchemy
 ta
