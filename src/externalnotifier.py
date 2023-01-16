@@ -1,5 +1,7 @@
 import requests
 
+import config
+
 
 # TO FIND CHAT ID
 # TOKEN = "TOKEN"
@@ -16,3 +18,9 @@ def send_telegram_message(token, chat_id, message):
 
     # Send the message
     requests.get(url).json()
+
+
+def externally_notify(message):
+    send_telegram_message(config.TELEGRAM_BOT_TOKEN,
+                          config.TELEGRAM_BOT_CHAT_ID,
+                          message)

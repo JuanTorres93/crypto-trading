@@ -7,6 +7,7 @@ import ccxt
 import commonutils as cu
 import config
 import exchangehandler as ex_han
+import externalnotifier
 import filesystemutils as fs
 import marketfinder as mar_fin
 import model
@@ -417,6 +418,7 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
 
 
 def run_bot(simulate):
+    externalnotifier.externally_notify("Bot iniciado")
     cu.log("Trying to close opened positions")
     check_every_opened_trade_for_break_even()
     close_all_opened_positions()
@@ -439,6 +441,7 @@ def run_bot(simulate):
             time.sleep(70)
 
     cu.log(f"markets: {markets}")
+    externalnotifier.externally_notify("Mercados inicializados")
 
     # CHANGE STRATEGY HERE
     strat = st.SupportAndResistanceHigherTimeframeBullishDivergence()
@@ -468,6 +471,7 @@ if __name__ == "__main__":
             time.sleep(600)
         except Exception:
             cu.log_traceback()
+            externalnotifier.externally_notify("El bot ha parado debido a una excepción")
             raise Exception("Bot stopped")
 
     # import indicator as ind
