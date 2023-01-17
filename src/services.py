@@ -422,21 +422,32 @@ def notify_results_for_previous_day():
     repo = rp.provide_sqlalchemy_repository(True)
     today = datetime.today()
     yesterday = today - timedelta(days=1)
-    results = repo.get_results_for_day_month_day(yesterday.day, yesterday.month,
-                                                 yesterday.year)
+    results = repo.get_results_for_day_month_year(yesterday.day,
+                                                  yesterday.month,
+                                                  yesterday.year)
     externalnotifier.externally_notify(f"=========={yesterday.day}/{yesterday.month}/{yesterday.year}==========")
     for r in results:
         msg = f"{r[0]} | {r[1]} posiciones | {r[2]:.2f} €"
         externalnotifier.externally_notify(msg)
 
 
-def run_bot(simulate):
-    externalnotifier.externally_notify("Bot iniciado")
-    cu.log("Trying to close opened positions")
-    check_every_opened_trade_for_break_even()
-    close_all_opened_positions()
-    shut_down_bot()
+def notify_results_for_previous_month():
+    repo = rp.provide_sqlalchemy_repository(True)
+    today = datetime.today()
+    # This condition exists because there is no schedule every month
+    if today.day == 2:
+        first_day_current_month = today.replace(day=1)
+        last_day_previous_month = first_day_current_month - timedelta(days=1)
+        results = repo.get_results_for_day_month_year("%",
+                                                      last_day_previous_month.month,
+                                                      last_day_previous_month.year)
+        externalnotifier.externally_notify(f"=========={last_day_previous_month.month}/{last_day_previous_month.year}==========")
+        for r in results:
+            msg = f"{r[0]} | {r[1]} posiciones | {r[2]:.2f} €"
+            externalnotifier.externally_notify(msg)
 
+
+def initialize_markets():
     # Init markets
     markets = []
     cu.log("Initializing markets")
@@ -455,6 +466,18 @@ def run_bot(simulate):
 
     cu.log(f"markets: {markets}")
     externalnotifier.externally_notify("Mercados inicializados")
+
+    return markets
+
+
+def run_bot(simulate):
+    externalnotifier.externally_notify("Bot iniciado")
+    cu.log("Trying to close opened positions")
+    check_every_opened_trade_for_break_even()
+    close_all_opened_positions()
+    shut_down_bot()
+
+    markets = initialize_markets()
 
     # CHANGE STRATEGY HERE
     strat = st.SupportAndResistanceHigherTimeframeBullishDivergence()
@@ -478,6 +501,8 @@ def run_bot(simulate):
 
 if __name__ == "__main__":
     schedule.every().day.at("08:00").do(notify_results_for_previous_day)
+    schedule.every().day.at("09:00").do(notify_results_for_previous_month)
+    schedule.every().week.do(initialize_markets)
 
     while True:
         try:
