@@ -418,6 +418,22 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
         cu.log("Already opened position")
 
 
+def notify_results_for_current_day():
+    repo = rp.provide_sqlalchemy_repository(True)
+    today = datetime.today()
+    results = repo.get_results_for_day_month_year(today.day,
+                                                  today.month,
+                                                  today.year)
+    externalnotifier.externally_notify(f"=========={today.day}/{today.month}/{today.year}==========")
+    for r in results:
+        fiat_amount = None
+        if r[2] is not None:
+            fiat_amount = f"{r[2]:.2f} €"
+
+        msg = f"{r[0]} | {r[1]} posiciones | {fiat_amount}"
+        externalnotifier.externally_notify(msg)
+
+
 def notify_results_for_previous_day():
     repo = rp.provide_sqlalchemy_repository(True)
     today = datetime.today()
@@ -427,7 +443,11 @@ def notify_results_for_previous_day():
                                                   yesterday.year)
     externalnotifier.externally_notify(f"=========={yesterday.day}/{yesterday.month}/{yesterday.year}==========")
     for r in results:
-        msg = f"{r[0]} | {r[1]} posiciones | {r[2]:.2f} €"
+        fiat_amount = None
+        if r[2] is not None:
+            fiat_amount = f"{r[2]:.2f} €"
+
+        msg = f"{r[0]} | {r[1]} posiciones | {fiat_amount}"
         externalnotifier.externally_notify(msg)
 
 
@@ -443,7 +463,11 @@ def notify_results_for_previous_month():
                                                       last_day_previous_month.year)
         externalnotifier.externally_notify(f"=========={last_day_previous_month.month}/{last_day_previous_month.year}==========")
         for r in results:
-            msg = f"{r[0]} | {r[1]} posiciones | {r[2]:.2f} €"
+            fiat_amount = None
+            if r[2] is not None:
+                fiat_amount = f"{r[2]:.2f} €"
+
+            msg = f"{r[0]} | {r[1]} posiciones | {fiat_amount}"
             externalnotifier.externally_notify(msg)
 
 
@@ -500,6 +524,10 @@ def run_bot(simulate):
 
 
 if __name__ == "__main__":
+    schedule.every().day.at("14:00").do(notify_results_for_current_day)
+    schedule.every().day.at("18:00").do(notify_results_for_current_day)
+    schedule.every().day.at("21:00").do(notify_results_for_current_day)
+
     schedule.every().day.at("08:00").do(notify_results_for_previous_day)
     schedule.every().day.at("09:00").do(notify_results_for_previous_month)
     schedule.every().week.do(initialize_markets)
