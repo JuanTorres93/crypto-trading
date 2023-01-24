@@ -162,7 +162,7 @@ class SupportAndResistanceHigherTimeframeBullishDivergence(Strategy):
         # highest. Filter to get the last 100 candles divergence
         exists_hidden_bull_div_ht = len(
             list(filter(
-                lambda x: x >= 975,
+                lambda x: x >= 985,
                 list(bull_div_ht.index)
             ))
         ) > 0
