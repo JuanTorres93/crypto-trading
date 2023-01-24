@@ -210,13 +210,19 @@ class CcxtExchangeHandler(ExchangeHandler):
                                                     side='sell',
                                                     amount=amount)
 
+        try:
+            fee_in_asset = sell_order['fee']['cost']
+        except TypeError:
+            cu.log('Could not find fee in buy order. Assuming zero.')
+            fee_in_asset = 0
+
         order_info = {
             "exchange_id": sell_order['id'],
             "timestamp": sell_order['timestamp'],
             "price": sell_order['price'],
             "amount": sell_order['amount'],
             "cost": sell_order['cost'],
-            "fee_in_asset": sell_order['fee']['cost'],
+            "fee_in_asset": fee_in_asset,
         }
 
         return order_info
