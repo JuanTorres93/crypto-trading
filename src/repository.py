@@ -56,6 +56,16 @@ class AbstractRepository(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def modify_take_profit(self, id, new_take_profit):
+        """
+        Modifies the take profit of the given trade (id)
+        :param id: id in local database of the trade to modify
+        :param new_take_profit: new value of the take profit
+        :return:
+        """
+        raise NotImplementedError
+
 
 class SqlAlchemyRepository(AbstractRepository):
     def add_trade(self, trade):
@@ -100,6 +110,11 @@ class SqlAlchemyRepository(AbstractRepository):
     def modify_stop_loss(self, id, new_stop_loss):
         trade = self.get_trade(id)
         trade.modified_stop_loss = new_stop_loss
+        self.commit()
+
+    def modify_take_profit(self, id, new_take_profit):
+        trade = self.get_trade(id)
+        trade.modified_take_profit = new_take_profit
         self.commit()
 
     def get_results_for_day_month_year(self, day, month, year):

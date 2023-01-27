@@ -321,6 +321,39 @@ def set_stop_loss_to_break_even_in_opened_position(symbol, vs_currency):
                               new_stop_loss=opened_trade.entry_price)
 
 
+def set_take_profit_to_percentage_in_opened_position(symbol, vs_currency, percentage):
+    """
+    NOT TESTED METHOD
+    :param symbol:
+    :param vs_currency:
+    :param percentage: percentage to which reduce the range of take profit. MUST BE between 0-1
+    :return:
+    """
+    repo = rp.provide_sqlalchemy_repository(real_db=True)
+
+    opened_trade = repo.get_opened_positions(symbol=symbol,
+                                             vs_currency=vs_currency)
+
+    if opened_trade:
+        opened_trade = opened_trade[0]
+        # Retrieve info from database
+        take_profit = opened_trade.take_profit
+        entry_price = opened_trade.entry_price
+
+        # Compute current profit range
+        take_profit_range = take_profit - entry_price
+        # Reduce profit range by percentage
+        modified_take_profit_range = percentage * take_profit_range
+
+        # Add new profit range to entry price to complete the new take profit
+        new_take_profit = entry_price + modified_take_profit_range
+
+        # Store new take profit in database
+        repo.modify_take_profit(id=opened_trade.id,
+                                new_take_profit=new_take_profit)
+
+
+
 def check_every_opened_trade_for_break_even():
     """
     If the current price has surpassed the half of the take profit territory, then
@@ -342,6 +375,30 @@ def check_every_opened_trade_for_break_even():
         if current_price >= mid_take_profit:
             set_stop_loss_to_break_even_in_opened_position(symbol=op.symbol,
                                                            vs_currency=op.vs_currency_symbol)
+
+
+def check_every_opened_trade_for_reduction_in_take_profit(take_profit_percentage_reduction=.5):
+    """
+    If the current price has gone below the half of the stop loss territory, then
+    modify the take profit to a percentage
+    :return:
+    """
+    repo = rp.provide_sqlalchemy_repository(real_db=True)
+
+    opened_positions = repo.get_opened_positions()
+
+    for op in opened_positions:
+        current_price = eh.get_current_price(symbol=op.symbol,
+                                             vs_currency=op.vs_currency_symbol)
+        entry_price = op.entry_price
+        stop_loss = op.stop_loss
+
+        mid_stop_loss = entry_price - (entry_price - stop_loss) / 2
+
+        if current_price <= mid_stop_loss:
+            set_take_profit_to_percentage_in_opened_position(symbol=op.symbol,
+                                                             vs_currency=op.vs_currency_symbol,
+                                                             percentage=take_profit_percentage_reduction)
 
 
 def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
@@ -498,6 +555,7 @@ def run_bot(simulate):
     externalnotifier.externally_notify("Bot iniciado")
     cu.log("Trying to close opened positions")
     check_every_opened_trade_for_break_even()
+    check_every_opened_trade_for_reduction_in_take_profit()
     close_all_opened_positions()
     shut_down_bot()
 
@@ -517,6 +575,7 @@ def run_bot(simulate):
                                               is_real=not simulate)
 
             check_every_opened_trade_for_break_even()
+            check_every_opened_trade_for_reduction_in_take_profit()
             close_all_opened_positions()
             shut_down_bot()
             schedule.run_pending()

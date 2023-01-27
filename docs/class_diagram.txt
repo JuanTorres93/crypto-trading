@@ -81,6 +81,7 @@ classDiagram
     +update_trade_on_exit_position(id, vs_currency_result_no_fees, status, crypto_quantity_exit, exit_fee_vs_currency, exit_date)
     +get_opened_positions(symbol=None, vs_currency=None)
     +modify_stop_loss(id, new_stop_loss)
+    +modify_take_profit(id, new_take_profit)
   }
 
   class SqlAlchemyRepository{
@@ -140,7 +141,9 @@ classDiagram
     +close_opened_position(symbol, vs_currency)
     +close_all_opened_positions()
     +set_stop_loss_to_break_even_in_opened_position(symbol, vs_currency)
+    +set_take_profit_to_percentage_in_opened_position(symbol, vs_currency, percentage)
     +check_every_opened_trade_for_break_even()
+    +check_every_opened_trade_for_reduction_in_take_profit(take_profit_percentage_reduction)
     +enter_position(symbol, vs_currency, is_real)
     +compute_strategy_and_try_to_enter(symbol, vs_currency, strategy, strategy_entry_timeframe, is_real)
     +run_bot(simulate)
