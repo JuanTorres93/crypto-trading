@@ -6,7 +6,7 @@ DATE_QUERY = """
         FROM trade
         WHERE
         is_real IS TRUE
-        AND entry_date LIKE 'day/month/year %:%:%'	-- CAMBIAR ABAJO TAMBIÉN 'DD/MM/YYYY %:%:%'
+        AND exit_date LIKE 'day/month/year %:%:%'	-- CAMBIAR ABAJO TAMBIÉN 'DD/MM/YYYY %:%:%'
         GROUP BY status
         UNION ALL
         SELECT
@@ -16,6 +16,6 @@ DATE_QUERY = """
         FROM trade
         WHERE 
         is_real IS TRUE
-        AND entry_date LIKE 'day/month/year %:%:%'	-- CAMBIAR ARRIBA TAMBIÉN 'DD/MM/YYYY %:%:%'
+        AND exit_date LIKE 'day/month/year %:%:%'	-- CAMBIAR ARRIBA TAMBIÉN 'DD/MM/YYYY %:%:%'
         ;
 """
