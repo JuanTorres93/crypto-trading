@@ -552,6 +552,7 @@ def initialize_markets():
 
 
 def run_bot(simulate):
+    cu.initialize_log_file()
     externalnotifier.externally_notify("Bot iniciado")
     cu.log("Trying to close opened positions")
     check_every_opened_trade_for_break_even()
@@ -583,9 +584,12 @@ def run_bot(simulate):
 
 
 if __name__ == "__main__":
-    schedule.every().day.at("14:00").do(notify_results_for_current_day)
-    schedule.every().day.at("18:00").do(notify_results_for_current_day)
-    schedule.every().day.at("21:00").do(notify_results_for_current_day)
+    schedule.every().day.at("12:00").do(notify_results_for_current_day)
+    schedule.every().day.at("16:00").do(notify_results_for_current_day)
+    schedule.every().day.at("20:00").do(notify_results_for_current_day)
+
+    # Remove log file every day in order not to saturate memory
+    schedule.every().day.at("00:00").do(cu.initialize_log_file)
 
     schedule.every().day.at("08:00").do(notify_results_for_previous_day)
     schedule.every().day.at("09:00").do(notify_results_for_previous_month)
