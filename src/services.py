@@ -1,5 +1,6 @@
-import os.path
+from collections import OrderedDict
 from datetime import datetime, timedelta
+import os.path
 import time
 
 import ccxt
@@ -545,6 +546,8 @@ def initialize_markets():
             cu.log(f"{datetime.now()}: Could not initialize. Trying again in 70s.")
             time.sleep(70)
 
+    markets_not_duplicated = OrderedDict.fromkeys(markets)
+    markets = list(markets_not_duplicated)
     cu.log(f"markets: {markets}")
     externalnotifier.externally_notify("Mercados inicializados")
 
