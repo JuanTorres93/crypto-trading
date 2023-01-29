@@ -125,6 +125,14 @@ class ExchangeHandler(ABC):
         """
         raise NotImplementedError
 
+    def get_total_amount_in_symbol(self, symbol):
+        """
+        Gets the total amount of symbol in account
+        :param symbol: symbol to fetch the total amount
+        :return: amount of symbol
+        """
+        raise NotImplementedError
+
 
 class CcxtExchangeHandler(ExchangeHandler):
     """
@@ -341,6 +349,51 @@ class CcxtExchangeHandler(ExchangeHandler):
 
         return list(close)[0]
 
+    def get_total_amount_in_symbol(self, symbol='EUR'):
+        """
+        See description in parent class
+        This method is susceptible to not work with other symbols
+        """
+        # Retrieve balances from account
+        balances = self._exchange_api.fetch_balance()
+        # Extract total balances as a dictionary (includes balances with value 0)
+        balances = balances.pop('total')
+
+        # Store non_zero_balances
+        non_zero_balances = {}
+        for key, val in balances.items():
+            if val > 0:
+                non_zero_balances[key] = val
+
+        symbol_balance = non_zero_balances.pop(symbol)
+
+        # Retrieve tickers to convert each balance to the specified symbol
+        tickers = self._exchange_api.fetch_tickers()
+        # Store only useful tickers
+        useful_tickers = {}
+        for key, ticker in tickers.items():
+            if key.endswith(symbol):
+                useful_tickers[key] = ticker
+
+        # Find non-matching elements
+        ticker_symbols = set(
+            map(
+                lambda x: x.split('/')[0],
+                set(useful_tickers.keys())
+            )
+        )
+        balances_symbols = set(non_zero_balances.keys())
+
+        different_symbols = balances_symbols.difference(ticker_symbols)
+
+        for sym in different_symbols:
+            non_zero_balances.pop(sym)
+
+        for sym, val in non_zero_balances.items():
+            symbol_balance += useful_tickers[f'{sym}/{symbol}']['last'] * val
+
+        return symbol_balance
+
 
 class BinanceCcxtExchangeHandler(CcxtExchangeHandler):
     pass
@@ -355,7 +408,7 @@ if __name__ == '__main__':
             'enableLimitRate': True,
         }
     ))
-    borrar = bin_eh.fetch_market('ADA', 'EUR')
-    pass
+    borrar = bin_eh.get_total_amount_in_symbol('EUR')
+    print(borrar)
 
 

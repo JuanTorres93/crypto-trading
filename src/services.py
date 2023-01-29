@@ -201,7 +201,7 @@ def close_opened_position(symbol, vs_currency):
                                                    status=status)
         repo.commit()
         cu.log(f"{model.format_date_for_database(datetime.now())} closed position for {symbol}")
-        # raise Exception(f"BORRAR ESTE RAISE DEL CÓDIGO. SÓLO ESTÁ PARA QUE NO SE ENTRE EN NUEVAS POSICIONES REALES")
+        update_max_vs_currency_to_use()
 
 
 def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
@@ -552,6 +552,21 @@ def initialize_markets():
     externalnotifier.externally_notify("Mercados inicializados")
 
     return markets
+
+
+def update_max_vs_currency_to_use():
+    """
+    Modifies config.MAX_VS_CURRENCY_TO_USE in order to always be able to have
+    7 trades at a time. The minimum value will always be 13 due to the minimum
+    required by Binance of 10 euros.
+    :return:
+    """
+    total_eur = eh.get_total_amount_in_symbol(symbol='EUR')
+    new_max_vs_currency_to_use = total_eur / 7.2 # Can be 7 trades simultaneously. Decimals to take fees into account
+
+    new_max_vs_currency_to_use = new_max_vs_currency_to_use if new_max_vs_currency_to_use > 13 else 13 # Minimun of 13 euros due to binance minimum of 10
+
+    config.MAX_VS_CURRENCY_TO_USE = new_max_vs_currency_to_use
 
 
 def run_bot(simulate):

@@ -100,6 +100,7 @@ classDiagram
     +get_fee_factor(symbol, vs_currency, type='spot')
     +get_free_balance(symbol)
     +get_current_price(symbol, vs_currency)
+    +get_total_amount_in_symbol(symbol)
     -_sell_market_order(symbol, vs_currency, amount)
     -_market_from_symbol_and_vs_currency(symbol, vs_currency)
   }
@@ -146,5 +147,6 @@ classDiagram
     +check_every_opened_trade_for_reduction_in_take_profit(take_profit_percentage_reduction)
     +enter_position(symbol, vs_currency, is_real)
     +compute_strategy_and_try_to_enter(symbol, vs_currency, strategy, strategy_entry_timeframe, is_real)
+    +update_max_vs_currency_to_use()
     +run_bot(simulate)
   }
