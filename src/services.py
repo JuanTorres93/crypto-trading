@@ -354,7 +354,6 @@ def set_take_profit_to_percentage_in_opened_position(symbol, vs_currency, percen
                                 new_take_profit=new_take_profit)
 
 
-
 def check_every_opened_trade_for_break_even():
     """
     If the current price has surpassed the half of the take profit territory, then
@@ -378,10 +377,12 @@ def check_every_opened_trade_for_break_even():
                                                            vs_currency=op.vs_currency_symbol)
 
 
-def check_every_opened_trade_for_reduction_in_take_profit(take_profit_percentage_reduction=.5):
+def check_every_opened_trade_for_reduction_in_take_profit(reduce_take_profit_to_percentage=.1):
     """
     If the current price has gone below the half of the stop loss territory, then
     modify the take profit to a percentage
+    :param reduce_take_profit_to_percentage: final percentage to reduce take profit. E.g. if this variable is .1 then
+    the take profit will be reduced to a 10% of its initial value, i.e., it will be reduced a 90%
     :return:
     """
     repo = rp.provide_sqlalchemy_repository(real_db=True)
@@ -399,7 +400,7 @@ def check_every_opened_trade_for_reduction_in_take_profit(take_profit_percentage
         if current_price <= mid_stop_loss:
             set_take_profit_to_percentage_in_opened_position(symbol=op.symbol,
                                                              vs_currency=op.vs_currency_symbol,
-                                                             percentage=take_profit_percentage_reduction)
+                                                             percentage=reduce_take_profit_to_percentage)
 
 
 def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
