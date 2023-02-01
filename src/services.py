@@ -514,7 +514,7 @@ def notify_results_for_previous_month():
     repo = rp.provide_sqlalchemy_repository(True)
     today = datetime.today()
     # This condition exists because there is no schedule every month
-    if today.day == 2:
+    if today.day == 1:
         first_day_current_month = today.replace(day=1)
         last_day_previous_month = first_day_current_month - timedelta(days=1)
         results = repo.get_results_for_day_month_year("%",
@@ -528,6 +528,24 @@ def notify_results_for_previous_month():
 
             msg = f"{r[0]} | {r[1]} posiciones | {fiat_amount}"
             externalnotifier.externally_notify(msg)
+
+
+def notify_results_for_current_month():
+    repo = rp.provide_sqlalchemy_repository(True)
+
+    today = datetime.today()
+    results = repo.get_results_for_day_month_year("%",
+                                                  today.month,
+                                                  today.year)
+
+    externalnotifier.externally_notify(f"========== Notificación semanal del estado actual del mes ==========")
+    for r in results:
+        fiat_amount = None
+        if r[2] is not None:
+            fiat_amount = f"{r[2]:.2f} €"
+
+        msg = f"{r[0]} | {r[1]} posiciones | {fiat_amount}"
+        externalnotifier.externally_notify(msg)
 
 
 def initialize_markets():
@@ -603,6 +621,7 @@ def run_bot(simulate):
 
 
 if __name__ == "__main__":
+    # Daily notification of current day status
     schedule.every().day.at("12:00").do(notify_results_for_current_day)
     schedule.every().day.at("16:00").do(notify_results_for_current_day)
     schedule.every().day.at("20:00").do(notify_results_for_current_day)
@@ -610,8 +629,14 @@ if __name__ == "__main__":
     # Remove log file every day in order not to saturate memory
     schedule.every().day.at("00:00").do(cu.initialize_log_file)
 
+    # Notification of previous day results
     schedule.every().day.at("08:00").do(notify_results_for_previous_day)
+    # Notification of previous month results
     schedule.every().day.at("09:00").do(notify_results_for_previous_month)
+
+    # Weekly notifications oƒ current month results
+    schedule.every().monday.at("08:30").do(notify_results_for_current_month)
+
     schedule.every().week.do(initialize_markets)
 
     while True:
