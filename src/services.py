@@ -616,9 +616,12 @@ if __name__ == "__main__":
     while True:
         try:
             run_bot(simulate=False)
-        except ccxt.errors.RequestTimeout:
-            cu.log(f"ccxt.errors.RequestTimeout raised. Sleeping for 600 seconds and trying again")
-            time.sleep(600)
+        except (ccxt.errors.RequestTimeout, ccxt.errors.NetworkError):
+            time_to_wait_in_seconds = 600
+            msg = f"ccxt.errors.RequestTimeout raised. Sleeping for {time_to_wait_in_seconds} seconds and trying again"
+            externalnotifier.externally_notify(msg)
+            cu.log(msg)
+            time.sleep(time_to_wait_in_seconds)
         except Exception:
             cu.log_traceback()
             externalnotifier.externally_notify("El bot ha parado debido a una excepción")
