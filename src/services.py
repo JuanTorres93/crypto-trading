@@ -354,7 +354,6 @@ def set_take_profit_to_percentage_in_opened_position(symbol, vs_currency, percen
                                 new_take_profit=new_take_profit)
 
 
-
 def check_every_opened_trade_for_break_even():
     """
     If the current price has surpassed the half of the take profit territory, then
@@ -378,10 +377,12 @@ def check_every_opened_trade_for_break_even():
                                                            vs_currency=op.vs_currency_symbol)
 
 
-def check_every_opened_trade_for_reduction_in_take_profit(take_profit_percentage_reduction=.5):
+def check_every_opened_trade_for_reduction_in_take_profit(reduce_take_profit_to_percentage=.1):
     """
     If the current price has gone below the half of the stop loss territory, then
     modify the take profit to a percentage
+    :param reduce_take_profit_to_percentage: final percentage to reduce take profit. E.g. if this variable is .1 then
+    the take profit will be reduced to a 10% of its initial value, i.e., it will be reduced a 90%
     :return:
     """
     repo = rp.provide_sqlalchemy_repository(real_db=True)
@@ -399,7 +400,7 @@ def check_every_opened_trade_for_reduction_in_take_profit(take_profit_percentage
         if current_price <= mid_stop_loss:
             set_take_profit_to_percentage_in_opened_position(symbol=op.symbol,
                                                              vs_currency=op.vs_currency_symbol,
-                                                             percentage=take_profit_percentage_reduction)
+                                                             percentage=reduce_take_profit_to_percentage)
 
 
 def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
@@ -513,7 +514,7 @@ def notify_results_for_previous_month():
     repo = rp.provide_sqlalchemy_repository(True)
     today = datetime.today()
     # This condition exists because there is no schedule every month
-    if today.day == 2:
+    if today.day == 1:
         first_day_current_month = today.replace(day=1)
         last_day_previous_month = first_day_current_month - timedelta(days=1)
         results = repo.get_results_for_day_month_year("%",
@@ -527,6 +528,24 @@ def notify_results_for_previous_month():
 
             msg = f"{r[0]} | {r[1]} posiciones | {fiat_amount}"
             externalnotifier.externally_notify(msg)
+
+
+def notify_results_for_current_month():
+    repo = rp.provide_sqlalchemy_repository(True)
+
+    today = datetime.today()
+    results = repo.get_results_for_day_month_year("%",
+                                                  today.month,
+                                                  today.year)
+
+    externalnotifier.externally_notify(f"========== Notificación semanal del estado actual del mes ==========")
+    for r in results:
+        fiat_amount = None
+        if r[2] is not None:
+            fiat_amount = f"{r[2]:.2f} €"
+
+        msg = f"{r[0]} | {r[1]} posiciones | {fiat_amount}"
+        externalnotifier.externally_notify(msg)
 
 
 def initialize_markets():
@@ -602,6 +621,7 @@ def run_bot(simulate):
 
 
 if __name__ == "__main__":
+    # Daily notification of current day status
     schedule.every().day.at("12:00").do(notify_results_for_current_day)
     schedule.every().day.at("16:00").do(notify_results_for_current_day)
     schedule.every().day.at("20:00").do(notify_results_for_current_day)
@@ -609,8 +629,14 @@ if __name__ == "__main__":
     # Remove log file every day in order not to saturate memory
     schedule.every().day.at("00:00").do(cu.initialize_log_file)
 
+    # Notification of previous day results
     schedule.every().day.at("08:00").do(notify_results_for_previous_day)
+    # Notification of previous month results
     schedule.every().day.at("09:00").do(notify_results_for_previous_month)
+
+    # Weekly notifications oƒ current month results
+    schedule.every().monday.at("08:30").do(notify_results_for_current_month)
+
     schedule.every().week.do(initialize_markets)
 
     while True:

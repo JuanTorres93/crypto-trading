@@ -137,6 +137,7 @@ classDiagram
   }
 
   class Services{
+    +shut_down_bot()
     +position_can_be_profitable(exchange_handler, strategy_output, symbol, vs_currency, amount)
     +manage_risk_on_entry(vs_currency_on_entry, strategy_output, max_vs_currency_to_use)
     +close_opened_position(symbol, vs_currency)
@@ -147,6 +148,10 @@ classDiagram
     +check_every_opened_trade_for_reduction_in_take_profit(take_profit_percentage_reduction)
     +enter_position(symbol, vs_currency, is_real)
     +compute_strategy_and_try_to_enter(symbol, vs_currency, strategy, strategy_entry_timeframe, is_real)
+    +notify_results_for_current_day()
+    +notify_results_for_previous_day()
+    +notify_results_for_current_month()
+    +notify_results_for_previous_month()
     +update_max_vs_currency_to_use()
     +run_bot(simulate)
   }
