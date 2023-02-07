@@ -18,8 +18,7 @@ classDiagram
     -_api
     -_top_markets
     -_markets_to_trade
-    +pairs_for_exchange_vs_currency
-    +get_top_markets(vs_currency, force=True) list~dict~
+    +get_top_markets(vs_currency, force=False) list~dict~
     +get_pairs_for_exchange_vs_currency(exchange_id, vs_currency, force=False)
     +get_pairs_for_exchange_symbol_vs(exchange_id, symbol_vs, force=False)
     +list_top_symbols(vs_currency) list

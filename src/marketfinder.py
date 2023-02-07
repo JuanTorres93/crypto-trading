@@ -6,6 +6,10 @@ from pycoingecko import CoinGeckoAPI
 
 
 class MarketFinder(ABC):
+    """
+    This class is aimed to retrieve current market information. It includes services like
+    CoinGecko, CoinMarketCap, etc.
+    """
     def __init__(self):
         # Instantiate api on children classes
         self._api = None
