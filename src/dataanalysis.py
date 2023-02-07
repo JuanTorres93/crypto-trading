@@ -9,7 +9,7 @@ import exchangehandler as ex_han
 from repository import provide_sqlalchemy_repository
 
 
-eh = ex_han.BinanceCcxtExchangeHandler(
+eh = ex_han.CcxtExchangeHandler(
     ccxt.binance(
         {
             'apiKey': config.BINANCE_API_KEY,

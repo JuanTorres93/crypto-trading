@@ -395,13 +395,9 @@ class CcxtExchangeHandler(ExchangeHandler):
         return symbol_balance
 
 
-class BinanceCcxtExchangeHandler(CcxtExchangeHandler):
-    pass
-
-
 if __name__ == '__main__':
     import config
-    bin_eh = BinanceCcxtExchangeHandler(ccxt.binance(
+    bin_eh = CcxtExchangeHandler(ccxt.binance(
         {
             'apiKey': config.BINANCE_API_KEY,
             'secret': config.BINANCE_SECRET_KEY,
@@ -410,5 +406,3 @@ if __name__ == '__main__':
     ))
     borrar = bin_eh.get_total_amount_in_symbol('EUR')
     print(borrar)
-
-

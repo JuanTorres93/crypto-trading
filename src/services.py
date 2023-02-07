@@ -17,7 +17,7 @@ import repository as rp
 import strategy as st
 
 
-eh = ex_han.BinanceCcxtExchangeHandler(
+eh = ex_han.CcxtExchangeHandler(
     ccxt.binance(
         {
             'apiKey': config.BINANCE_API_KEY,

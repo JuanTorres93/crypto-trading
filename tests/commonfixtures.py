@@ -80,12 +80,12 @@ def bitcoin_price_eur():
 
 @pytest.fixture
 def binance_eh_no_keys():
-    return eh.BinanceCcxtExchangeHandler(ccxt.binance())
+    return eh.CcxtExchangeHandler(ccxt.binance())
 
 
 @pytest.fixture
 def binance_eh():
-    return eh.BinanceCcxtExchangeHandler(ccxt.binance(
+    return eh.CcxtExchangeHandler(ccxt.binance(
         {
             'apiKey': config.BINANCE_API_KEY,
             'secret': config.BINANCE_SECRET_KEY,
