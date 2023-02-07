@@ -25,11 +25,6 @@ class AbstractRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def update_trade_on_oco_order_creation(self, id, oco_stop_exchange_id,
-                                           oco_limit_exchange_id):
-        raise NotImplementedError
-
-    @abstractmethod
     def update_trade_on_exit_position(self, id, vs_currency_result_no_fees,
                                       status, crypto_quantity_exit,
                                       exit_fee_vs_currency, exit_date):
@@ -66,6 +61,13 @@ class AbstractRepository(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def get_results_for_day_month_year(self, day, month, year):
+        """
+        Queries the results for the given day, month and year
+        """
+        raise NotImplementedError
+
 
 class SqlAlchemyRepository(AbstractRepository):
     def add_trade(self, trade):
@@ -76,13 +78,6 @@ class SqlAlchemyRepository(AbstractRepository):
 
     def commit(self):
         self._session.commit()
-
-    def update_trade_on_oco_order_creation(self, id, oco_stop_exchange_id,
-                                           oco_limit_exchange_id):
-        trade = self.get_trade(id)
-        trade.oco_stop_exchange_id = oco_stop_exchange_id
-        trade.oco_limit_exchange_id = oco_limit_exchange_id
-        self.commit()
 
     def update_trade_on_exit_position(self, id, vs_currency_result_no_fees,
                                       status, crypto_quantity_exit,
@@ -118,7 +113,6 @@ class SqlAlchemyRepository(AbstractRepository):
         self.commit()
 
     def get_results_for_day_month_year(self, day, month, year):
-        # TODO incluir en diagrama UML
         if type(day) is int:
             day = str(day).zfill(2)
         month = str(month).zfill(2)

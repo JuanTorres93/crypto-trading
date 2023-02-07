@@ -47,14 +47,8 @@ classDiagram
     +entry_fee_vs_currency: float
     +position: str
     +entry_date: str
-    +entry_order_exchange_id: str
-    +percentage_change_1h_on_entry: str
-    +percentage_change_1d_on_entry: str
-    +percentage_change_7d_on_entry: str
     +strategy_name: str
     +is_real: bool
-    +oco_stop_exchange_id: str = None
-    +oco_limit_exchange_id: str = None
     +vs_currency_result_no_fees: float = None
     +modified_stop_loss: float = None
     +modified_take_profit: float = None
@@ -65,6 +59,7 @@ classDiagram
 
   class TradeStatus{
     +OPENED: str
+    +PARTIAL: str
     +WON: str
     +LOST: str
   }
@@ -76,11 +71,11 @@ classDiagram
     +add_trade(trade)
     +get_trade(id)
     +commit()
-    +update_trade_on_oco_order_creation(id, oco_stop_exchange_id, oco_limit_exchange_id)
     +update_trade_on_exit_position(id, vs_currency_result_no_fees, status, crypto_quantity_exit, exit_fee_vs_currency, exit_date)
     +get_opened_positions(symbol=None, vs_currency=None)
     +modify_stop_loss(id, new_stop_loss)
     +modify_take_profit(id, new_take_profit)
+    +get_results_for_day_month_year(day, month, year)
   }
 
   class SqlAlchemyRepository{
