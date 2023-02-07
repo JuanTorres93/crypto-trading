@@ -31,6 +31,11 @@ mf = mar_fin.CoinGeckoMarketFinder()
 
 
 def shut_down_bot():
+    """
+    Shuts down bot gracefully in order not to mess with possible buys or sells
+
+    The current shut down method is based on the presence of a file in the home directory
+    """
     home = fs.home_directory(True)
     path_to_file = os.path.join(home, config.FILE_NAME_TO_CLOSE_BOT)
     if fs.path_exists(path_to_file):
@@ -38,56 +43,85 @@ def shut_down_bot():
         exit()
 
 
-def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler,
-                               strategy_output: st.StrategyOutput, symbol,
-                               vs_currency, amount):
+def compute_risk_reward_ratio(exchange_handler: ex_han.ExchangeHandler, strategy_output: st.StrategyOutput, symbol,
+                              vs_currency, amount, consider_fees=True):
     """
     Not tested method
-    Checks whether position can be profitable or not taking fees into accouunt
+    Computes the risk-reward ratio of the position. This is performed BEFORE entering an actual positions, hence real
+    value will differ
     :param exchange_handler: ExchangeHandler to fetch fees
     :param strategy_output: Strategy output to test
     :param symbol: Left-hand side of market symbol
     :param vs_currency: Right-hand side of market symbol
     :param amount: amount of symbol
+    :param consider_fees: take fees into account
     :return: True or False
     """
+    fee_factor = 0
+    entry_fee = 0
 
-    if strategy_output.can_enter:
-        # TODO implement other type of fee if other order types different from market orders are implemented
+    if consider_fees:
         fee_factor = exchange_handler.get_fee_factor(symbol=symbol,
                                                      vs_currency=vs_currency)['taker']
 
         # Fees are computed in the obtained asset
         entry_fee = fee_factor * amount
-        # Amount actually bought
-        entry_amount = amount - entry_fee
-        # Actual vs_currency entry
-        vs_currency_entry = amount * strategy_output.entry_price
 
-        if strategy_output.position_type == st.PositionType.LONG:
-            # Total vs_currency on exit not considering fees
-            vs_currency_win_no_fees = entry_amount * strategy_output.take_profit
-            vs_currency_lose_no_fees = entry_amount * strategy_output.stop_loss
+    # Amount actually bought
+    entry_amount = amount - entry_fee
 
-            # Possible exit fees in vs_currency
-            exit_fee_win = fee_factor * vs_currency_win_no_fees
-            exit_fee_lose = fee_factor * vs_currency_lose_no_fees
+    # Actual vs_currency entry
+    vs_currency_entry = amount * strategy_output.entry_price
 
-            # Expected total vs_currency on exit
-            vs_currency_win = vs_currency_win_no_fees - exit_fee_win
-            vs_currency_lose = vs_currency_lose_no_fees - exit_fee_lose
+    if strategy_output.position_type == st.PositionType.LONG:
+        # Total vs_currency on exit not considering fees
+        vs_currency_win_no_fees = entry_amount * strategy_output.take_profit
+        vs_currency_lose_no_fees = entry_amount * strategy_output.stop_loss
 
-            # Compare with initial state
-            win_margin = abs(vs_currency_win - vs_currency_entry)
-            lose_margin = abs(vs_currency_lose - vs_currency_entry)
+        # Possible exit fees in vs_currency
+        exit_fee_win = fee_factor * vs_currency_win_no_fees
+        exit_fee_lose = fee_factor * vs_currency_lose_no_fees
 
-            return win_margin / lose_margin > 1
+        # Expected total vs_currency on exit
+        vs_currency_win = vs_currency_win_no_fees - exit_fee_win
+        vs_currency_lose = vs_currency_lose_no_fees - exit_fee_lose
 
-        elif strategy_output.position_type == st.PositionType.SHORT:
-            # TODO implement
-            pass
-        else:
-            raise ValueError
+        # Compare with initial state
+        win_margin = abs(vs_currency_win - vs_currency_entry)
+        lose_margin = abs(vs_currency_lose - vs_currency_entry)
+
+        rrr = win_margin / lose_margin
+
+        return rrr > 1
+
+    elif strategy_output.position_type == st.PositionType.SHORT:
+        # TODO implement
+        pass
+    else:
+        raise ValueError
+
+
+def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler, strategy_output: st.StrategyOutput, symbol,
+                               vs_currency, amount, min_rrr=1.001, consider_fees=True):
+    """
+    Not tested method
+    Checks whether position can be profitable or not. This is performed BEFORE entering an actual positions, hence real
+    value will differ
+    :param exchange_handler: ExchangeHandler to fetch fees
+    :param strategy_output: Strategy output to test
+    :param symbol: Left-hand side of market symbol
+    :param vs_currency: Right-hand side of market symbol
+    :param amount: amount of symbol
+    :param consider_fees: take fees into account
+    :param min_rrr: minimum risk-reward ratio to consider the position profitable
+    :return: True or False
+    """
+
+    if strategy_output.can_enter:
+        rrr = compute_risk_reward_ratio(exchange_handler=exchange_handler, strategy_output=strategy_output,
+                                        symbol=symbol, vs_currency=vs_currency, amount=amount,
+                                        consider_fees=consider_fees)
+        return rrr >= min_rrr
 
     return False
 
@@ -444,9 +478,8 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
         fee = amount * fee_factor
         amount = amount * (1 - fee_factor)
 
-        if position_can_be_profitable(exchange_handler=eh, strategy_output=st_out,
-                                      symbol=symbol, vs_currency=vs_currency,
-                                      amount=amount):
+        if position_can_be_profitable(exchange_handler=eh, strategy_output=st_out, symbol=symbol,
+                                      vs_currency=vs_currency, amount=amount):
             if not is_real:
                 enter_position(symbol=symbol, vs_currency=vs_currency,
                                timeframe=strategy_entry_timeframe, stop_loss=st_out.stop_loss,

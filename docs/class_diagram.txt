@@ -128,6 +128,7 @@ classDiagram
   class Services{
     +shut_down_bot()
     +position_can_be_profitable(exchange_handler, strategy_output, symbol, vs_currency, amount)
+    +compute_risk_reward_ratio(exchange_handler, strategy_output, symbol, vs_currency, amount, min_rrr)
     +manage_risk_on_entry(vs_currency_on_entry, strategy_output, max_vs_currency_to_use)
     +close_opened_position(symbol, vs_currency)
     +close_all_opened_positions()
