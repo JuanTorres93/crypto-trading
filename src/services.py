@@ -17,17 +17,21 @@ import repository as rp
 import strategy as st
 
 
-eh = ex_han.BinanceCcxtExchangeHandler(
-    ccxt.binance(
-        {
-            'apiKey': config.BINANCE_API_KEY,
-            'secret': config.BINANCE_SECRET_KEY,
-            'enableLimitRate': True,
-        }
-    )
-)
-
 mf = mar_fin.CoinGeckoMarketFinder()
+eh = None
+
+
+def reload_exchange_handler():
+    global eh
+    eh = ex_han.BinanceCcxtExchangeHandler(
+        ccxt.binance(
+            {
+                'apiKey': config.BINANCE_API_KEY,
+                'secret': config.BINANCE_SECRET_KEY,
+                'enableLimitRate': True,
+            }
+        )
+    )
 
 
 def shut_down_bot():
@@ -377,7 +381,7 @@ def check_every_opened_trade_for_break_even():
                                                            vs_currency=op.vs_currency_symbol)
 
 
-def check_every_opened_trade_for_reduction_in_take_profit(reduce_take_profit_to_percentage=.1):
+def check_every_opened_trade_for_reduction_in_take_profit(reduce_take_profit_to_percentage=.3):
     """
     If the current price has gone below the half of the stop loss territory, then
     modify the take profit to a percentage
@@ -589,6 +593,7 @@ def update_max_vs_currency_to_use():
 
 
 def run_bot(simulate):
+    reload_exchange_handler()
     cu.initialize_log_file()
     externalnotifier.externally_notify("Bot iniciado")
     cu.log("Trying to close opened positions")
