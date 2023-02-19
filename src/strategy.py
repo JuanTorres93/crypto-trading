@@ -159,10 +159,10 @@ class SupportAndResistanceHigherTimeframeBullishDivergence(Strategy):
         closes_above_ema = (ht_df['close'] > ht_ema).iloc[-5:].all()
 
         # Checks the indexes where divergence exists. Most recent indexes are the
-        # highest. Filter to get the last 100 candles divergence
+        # highest. Filter to get the last 7 candles divergence
         exists_hidden_bull_div_ht = len(
             list(filter(
-                lambda x: x >= 985,
+                lambda x: x >= 992,
                 list(bull_div_ht.index)
             ))
         ) > 0
