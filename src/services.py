@@ -381,7 +381,7 @@ def check_every_opened_trade_for_break_even():
                                                            vs_currency=op.vs_currency_symbol)
 
 
-def check_every_opened_trade_for_reduction_in_take_profit(reduce_take_profit_to_percentage=.3):
+def check_every_opened_trade_for_reduction_in_take_profit(reduce_take_profit_to_percentage=.8):
     """
     If the current price has gone below the half of the stop loss territory, then
     modify the take profit to a percentage
