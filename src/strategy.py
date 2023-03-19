@@ -207,3 +207,28 @@ class SupportAndResistanceHigherTimeframeBullishDivergence(Strategy):
                                   entry_price=entry_price,
                                   position_type=PositionType.LONG)
 
+
+class VolumeTradingStrategy(Strategy):
+    def perform_strategy(self, entry_price, **dfs):
+        df = dfs['df']
+
+        quantile = df['volume'].quantile(.75)
+        atr_stop_loss = ind.get_atr_stop_loss(df)['low_band'].iloc[-1]
+
+        rrr = 1.5
+        stop_loss = atr_stop_loss.iloc[-1]
+        take_profit = entry_price + rrr * abs(entry_price - stop_loss)
+
+        if df.iloc[-1]['volume'] > quantile:
+            return StrategyOutput(can_enter=True, take_profit=take_profit,
+                                  stop_loss=stop_loss,
+                                  entry_price=entry_price,
+                                  position_type=PositionType.LONG)
+
+        return StrategyOutput(can_enter=False, take_profit=12.2, stop_loss=10,
+                              entry_price=11,
+                              position_type=PositionType.LONG)
+
+    def strategy_name(self):
+        return "volume_trading_strategy"
+

@@ -415,23 +415,17 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
 
     if not repo.get_opened_positions(symbol=symbol, vs_currency=vs_currency):
         # # COMPUTE HERE DF FOR STRATEGIES
-        df_lt = eh.get_candles_for_strategy(symbol=symbol,
+        df = eh.get_candles_for_strategy(symbol=symbol,
                                          vs_currency=vs_currency,
                                          timeframe=strategy_entry_timeframe,
-                                         num_candles=2000)
-
-        df_ht = eh.get_candles_for_strategy(symbol=symbol,
-                                            vs_currency=vs_currency,
-                                            timeframe='1h',
-                                            num_candles=2000)
+                                         num_candles=200)
 
         current_price = eh.get_current_price(symbol=symbol,
                                              vs_currency=vs_currency)
 
         # INCLUDE HERE THE DFs FOR STRATEGY
         st_out = strategy.perform_strategy(entry_price=current_price,
-                                           lt_df=df_lt,
-                                           ht_df=df_ht)
+                                           df=df)
 
 
         free_vs_currency = eh.get_free_balance(symbol=vs_currency)
@@ -605,7 +599,7 @@ def run_bot(simulate):
     markets = initialize_markets()
 
     # CHANGE STRATEGY HERE
-    strat = st.SupportAndResistanceHigherTimeframeBullishDivergence()
+    strat = st.VolumeTradingStrategy()
 
     cu.log("Starting main loop")
     while True:
@@ -646,7 +640,7 @@ if __name__ == "__main__":
 
     while True:
         try:
-            run_bot(simulate=False)
+            run_bot(simulate=True)
         except (ccxt.errors.RequestTimeout, ccxt.errors.NetworkError):
             time_to_wait_in_seconds = 600
             msg = f"ccxt.errors.RequestTimeout raised. Sleeping for {time_to_wait_in_seconds} seconds and trying again"
