@@ -4,6 +4,8 @@ from time import sleep
 import requests.exceptions
 from pycoingecko import CoinGeckoAPI
 
+import commonutils as cu
+
 
 class MarketFinder(ABC):
     def __init__(self):
@@ -77,7 +79,9 @@ class CoinGeckoMarketFinder(MarketFinder):
         # Saves available pairs for exchange when get_pairs_for_exchange is called to avoid api calls
         self._pairs_for_exchange = []
         # Time to wait when api credits are over
-        self._seconds_to_wait_on_http_error = 3
+        self._seconds_to_wait_on_http_error = 70
+        # Time to wait between requests
+        self._seconds_between_requests = int(31 / 60) # CoinGecko allows for 10-30 calls per minute
 
     def get_top_markets(self, vs_currency, force=False):
         """
@@ -91,12 +95,14 @@ class CoinGeckoMarketFinder(MarketFinder):
                 try:
                     # Fetch markets
                     markets = self._api.get_coins_markets(vs_currency)
+                    sleep(self._seconds_between_requests)
                     # Store them in the instance variable
                     self._top_markets.clear()
                     self._top_markets = markets
                     markets_fetched = True
-                except requests.exceptions.HTTPError:
+                except (requests.exceptions.HTTPError, ValueError) as e:
                     # If api credits are over, wait and try again
+                    cu.log(f"{e} raised. Waiting {self._seconds_to_wait_on_http_error} s to try again")
                     sleep(self._seconds_to_wait_on_http_error)
         else:
             # Retrieve stored information
@@ -140,9 +146,11 @@ class CoinGeckoMarketFinder(MarketFinder):
             try:
                 # Get symbol information
                 symbol_info = self._api.get_coin_by_id(symbol_id)
+                sleep(self._seconds_between_requests)
                 symbol_info_fetched = True
-            except requests.exceptions.HTTPError:
+            except (requests.exceptions.HTTPError, ValueError) as e:
                 # Wait if credits are over
+                cu.log(f"{e} raised. Waiting {self._seconds_to_wait_on_http_error} s to try again")
                 sleep(self._seconds_to_wait_on_http_error)
 
         # Make symbol upper case for consistency with other packages
@@ -165,9 +173,11 @@ class CoinGeckoMarketFinder(MarketFinder):
                 # Fetch information
                 exchange_tickers = self._api.get_exchanges_tickers_by_id(
                     exchange_id, page=page)
+                sleep(self._seconds_between_requests)
                 exchange_tickers_fetched = True
-            except requests.exceptions.HTTPError:
+            except (requests.exceptions.HTTPError, ValueError) as e:
                 # Wait if api credits are over
+                cu.log(f"{e} raised. Waiting {self._seconds_to_wait_on_http_error} s to try again")
                 sleep(self._seconds_to_wait_on_http_error)
 
         return exchange_tickers
