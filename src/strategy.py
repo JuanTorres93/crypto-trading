@@ -209,17 +209,27 @@ class SupportAndResistanceHigherTimeframeBullishDivergence(Strategy):
 
 
 class VolumeTradingStrategy(Strategy):
+
     def perform_strategy(self, entry_price, **dfs):
+        """
+        The dataframe included needs to include the last candle of the plot (the not finished one)
+        :param entry_price:
+        :param dfs:
+        :return:
+        """
         df = dfs['df']
 
+        current_candle_index = -1
+        last_finished_candle_index = -2
+
         quantile = df['volume'].quantile(.75)
-        atr_stop_loss = ind.get_atr_stop_loss(df)['low_band'].iloc[-1]
+        atr_stop_loss = ind.get_atr_stop_loss(df)['low_band'].iloc[last_finished_candle_index]
         stop_loss = atr_stop_loss
 
         rrr = 1.5
         take_profit = entry_price + rrr * abs(entry_price - stop_loss)
 
-        if df.iloc[-1]['volume'] > quantile:
+        if df.iloc[last_finished_candle_index]['volume'] > quantile and df.iloc[current_candle_index]['low'] > stop_loss:
             return StrategyOutput(can_enter=True, take_profit=take_profit,
                                   stop_loss=stop_loss,
                                   entry_price=entry_price,

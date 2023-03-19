@@ -44,10 +44,13 @@ def shut_down_bot():
 
 def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler,
                                strategy_output: st.StrategyOutput, symbol,
-                               vs_currency, amount):
+                               vs_currency, amount,
+                               update_st_out_to_get_real_rrr):
     """
     Not tested method
     Checks whether position can be profitable or not taking fees into accouunt
+    :param update_st_out_to_get_real_rrr: if true, take profit is widened to get the
+    real Risk Reward Ratio of the strategy
     :param exchange_handler: ExchangeHandler to fetch fees
     :param strategy_output: Strategy output to test
     :param symbol: Left-hand side of market symbol
@@ -84,6 +87,15 @@ def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler,
             # Compare with initial state
             win_margin = abs(vs_currency_win - vs_currency_entry)
             lose_margin = abs(vs_currency_lose - vs_currency_entry)
+
+            # Update strategy output
+            if update_st_out_to_get_real_rrr:
+                theoretical_take_profit_margin = abs(strategy_output.take_profit - strategy_output.entry_price)
+                theoretical_stop_loss_margin = abs(strategy_output.stop_loss - strategy_output.entry_price)
+                theoretical_rrr = theoretical_take_profit_margin / theoretical_stop_loss_margin
+                new_take_profit = exit_fee_win + theoretical_rrr * (strategy_output.stop_loss + exit_fee_lose)
+
+                strategy_output.take_profit = new_take_profit
 
             return win_margin / lose_margin > 1
 
@@ -415,10 +427,10 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
 
     if not repo.get_opened_positions(symbol=symbol, vs_currency=vs_currency):
         # # COMPUTE HERE DF FOR STRATEGIES
-        df = eh.get_candles_for_strategy(symbol=symbol,
-                                         vs_currency=vs_currency,
-                                         timeframe=strategy_entry_timeframe,
-                                         num_candles=200)
+        df = eh.get_candles_last_one_not_finished(symbol=symbol,
+                                                  vs_currency=vs_currency,
+                                                  timeframe=strategy_entry_timeframe,
+                                                  num_candles=200)
 
         current_price = eh.get_current_price(symbol=symbol,
                                              vs_currency=vs_currency)
@@ -442,9 +454,10 @@ def compute_strategy_and_try_to_enter(symbol, vs_currency, strategy,
         fee = amount * fee_factor
         amount = amount * (1 - fee_factor)
 
-        if position_can_be_profitable(exchange_handler=eh, strategy_output=st_out,
-                                      symbol=symbol, vs_currency=vs_currency,
-                                      amount=amount):
+        if position_can_be_profitable(exchange_handler=eh,
+                                      strategy_output=st_out, symbol=symbol,
+                                      vs_currency=vs_currency, amount=amount,
+                                      update_st_out_to_get_real_rrr=True):
             if not is_real:
                 enter_position(symbol=symbol, vs_currency=vs_currency,
                                timeframe=strategy_entry_timeframe, stop_loss=st_out.stop_loss,
@@ -608,7 +621,7 @@ def run_bot(simulate):
             compute_strategy_and_try_to_enter(symbol=symbol,
                                               vs_currency=vs_currency,
                                               strategy=strat,
-                                              strategy_entry_timeframe="5m",
+                                              strategy_entry_timeframe="4h",
                                               is_real=not simulate)
 
             check_every_opened_trade_for_break_even()
