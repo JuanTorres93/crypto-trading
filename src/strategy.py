@@ -214,9 +214,9 @@ class VolumeTradingStrategy(Strategy):
 
         quantile = df['volume'].quantile(.75)
         atr_stop_loss = ind.get_atr_stop_loss(df)['low_band'].iloc[-1]
+        stop_loss = atr_stop_loss
 
         rrr = 1.5
-        stop_loss = atr_stop_loss.iloc[-1]
         take_profit = entry_price + rrr * abs(entry_price - stop_loss)
 
         if df.iloc[-1]['volume'] > quantile:
