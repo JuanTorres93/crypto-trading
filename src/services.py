@@ -93,7 +93,7 @@ def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler,
                 theoretical_take_profit_margin = abs(strategy_output.take_profit - strategy_output.entry_price)
                 theoretical_stop_loss_margin = abs(strategy_output.stop_loss - strategy_output.entry_price)
                 theoretical_rrr = theoretical_take_profit_margin / theoretical_stop_loss_margin
-                new_take_profit = exit_fee_win + theoretical_rrr * (strategy_output.stop_loss + exit_fee_lose)
+                new_take_profit = exit_fee_win + theoretical_rrr * (strategy_output.stop_loss - exit_fee_lose)
 
                 strategy_output.take_profit = new_take_profit
 
