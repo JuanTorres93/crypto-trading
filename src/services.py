@@ -655,7 +655,7 @@ if __name__ == "__main__":
         try:
             run_bot(simulate=True)
         except (ccxt.errors.RequestTimeout, ccxt.errors.NetworkError):
-            time_to_wait_in_seconds = 600
+            time_to_wait_in_seconds = 900
             msg = f"ccxt.errors.RequestTimeout raised. Sleeping for {time_to_wait_in_seconds} seconds and trying again"
             externalnotifier.externally_notify(msg)
             cu.log(msg)
