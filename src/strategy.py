@@ -18,6 +18,12 @@ class StrategyOutput:
     position_type: str
 
 
+def _no_entry_output():
+    return StrategyOutput(can_enter=False, take_profit=12.2, stop_loss=10,
+                          entry_price=11,
+                          position_type=PositionType.LONG)
+
+
 class Strategy(ABC):
     @abstractmethod
     def perform_strategy(self, entry_price, **dfs):
@@ -222,9 +228,15 @@ class VolumeTradingStrategy(Strategy):
         current_candle_index = -1
         last_finished_candle_index = -2
 
-        quantile = df['volume'].quantile(.75)
-        atr_stop_loss = ind.get_atr_stop_loss(df)['low_band'].iloc[last_finished_candle_index]
-        stop_loss = atr_stop_loss
+        try:
+            # This is inside a try in case indicators cannot be computed due to a lack
+            # Of candles
+            quantile = df['volume'].quantile(.75)
+            atr_stop_loss = ind.get_atr_stop_loss(df)['low_band'].iloc[last_finished_candle_index]
+            stop_loss = atr_stop_loss
+
+        except Exception:
+            return _no_entry_output()
 
         rrr = 1.5
         take_profit = entry_price + rrr * abs(entry_price - stop_loss)
@@ -235,9 +247,7 @@ class VolumeTradingStrategy(Strategy):
                                   entry_price=entry_price,
                                   position_type=PositionType.LONG)
 
-        return StrategyOutput(can_enter=False, take_profit=12.2, stop_loss=10,
-                              entry_price=11,
-                              position_type=PositionType.LONG)
+        return _no_entry_output()
 
     def strategy_name(self):
         return "volume_trading_strategy"
