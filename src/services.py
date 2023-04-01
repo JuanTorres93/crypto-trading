@@ -99,6 +99,8 @@ def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler,
 
                 strategy_output.take_profit = new_take_profit
 
+                return 1 < (abs(new_take_profit - ep - exit_fee_win) / abs(ep - strategy_output.stop_loss - exit_fee_lose)) < 2.5
+
             return win_margin / lose_margin > 1
 
         elif strategy_output.position_type == st.PositionType.SHORT:

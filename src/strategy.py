@@ -250,5 +250,5 @@ class VolumeTradingStrategy(Strategy):
         return _no_entry_output()
 
     def strategy_name(self):
-        return "volume_trading_strategy"
+        return "volume_trading_strategy_delete_this_when_finished_testing"
 
