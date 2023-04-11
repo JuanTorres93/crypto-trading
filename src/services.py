@@ -221,7 +221,7 @@ def close_opened_position(symbol, vs_currency):
                                                    status=status)
         repo.commit()
         cu.log(f"{model.format_date_for_database(datetime.now())} closed position for {symbol}")
-        update_max_vs_currency_to_use()
+        # update_max_vs_currency_to_use()
 
 
 def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
@@ -657,7 +657,7 @@ if __name__ == "__main__":
 
     while True:
         try:
-            run_bot(simulate=True)
+            run_bot(simulate=False)
         except (ccxt.errors.RequestTimeout, ccxt.errors.NetworkError):
             time_to_wait_in_seconds = 900
             msg = f"ccxt.errors.RequestTimeout raised. Sleeping for {time_to_wait_in_seconds} seconds and trying again"
