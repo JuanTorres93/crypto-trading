@@ -69,7 +69,7 @@ def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler,
         # Amount actually bought
         entry_amount = amount - entry_fee
         # Actual vs_currency entry
-        vs_currency_entry = amount * strategy_output.entry_price
+        vs_currency_entry = entry_amount * strategy_output.entry_price
         # Entry price
         ep = strategy_output.entry_price
 
@@ -92,16 +92,17 @@ def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler,
 
             # Update strategy output
             if update_st_out_to_get_real_rrr:
+                # Theoretical means not taking fees into account
                 theoretical_take_profit_margin = abs(strategy_output.take_profit - strategy_output.entry_price)
-                theoretical_stop_loss_margin = abs(strategy_output.stop_loss - strategy_output.entry_price)
+                theoretical_stop_loss_margin = abs(strategy_output.entry_price - strategy_output.stop_loss)
                 theoretical_rrr = theoretical_take_profit_margin / theoretical_stop_loss_margin
                 new_take_profit = ep + exit_fee_win + theoretical_rrr * abs(ep - strategy_output.stop_loss + exit_fee_lose)
 
                 strategy_output.take_profit = new_take_profit
 
                 return 1 < (abs(new_take_profit - ep - exit_fee_win) / abs(ep - strategy_output.stop_loss - exit_fee_lose)) < 2.5
-
-            return win_margin / lose_margin > 1
+            else:
+                return win_margin / lose_margin > 1
 
         elif strategy_output.position_type == st.PositionType.SHORT:
             # TODO implement
