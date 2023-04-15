@@ -266,6 +266,10 @@ class CcxtExchangeHandler(ExchangeHandler):
             self._exchange_api.load_markets()
             market = self._exchange_api.market(symbol=market_symbol)
 
+        cu.log("START DEBUG")
+        cu.log(f"{symbol}/{vs_currency}")
+        cu.log(market)
+        cu.log("END DEBUG")
         return {
             'min_price': float(market['limits']['cost']['min']),
             'max_price': float(market['limits']['price']['max']),
