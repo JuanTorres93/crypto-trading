@@ -92,11 +92,27 @@ def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler,
 
             # Update strategy output
             if update_st_out_to_get_real_rrr:
+                cu.log("START DEBUG")
+                cu.log(f"Initial win margin {win_margin}")
+                cu.log(f"Initial lose margin {win_margin}")
+
                 # Theoretical means not taking fees into account
-                theoretical_take_profit_margin = abs(strategy_output.take_profit - strategy_output.entry_price)
-                theoretical_stop_loss_margin = abs(strategy_output.entry_price - strategy_output.stop_loss)
-                theoretical_rrr = theoretical_take_profit_margin / theoretical_stop_loss_margin
+                theoretical_win_margin = abs(strategy_output.take_profit - strategy_output.entry_price)
+
+                cu.log(f"Theoretical win margin {theoretical_win_margin}")
+
+                theoretical_loss_margin = abs(strategy_output.entry_price - strategy_output.stop_loss)
+
+                cu.log(f"Theoretical loss margin {theoretical_loss_margin}")
+
+                theoretical_rrr = theoretical_win_margin / theoretical_loss_margin
+
+                cu.log(f"Theoretical RRR {theoretical_rrr}")
+
                 new_take_profit = ep + exit_fee_win + theoretical_rrr * abs(ep - strategy_output.stop_loss + exit_fee_lose)
+
+                cu.log(f"New take profit {new_take_profit}")
+                cu.log("END DEBUG")
 
                 strategy_output.take_profit = new_take_profit
 
