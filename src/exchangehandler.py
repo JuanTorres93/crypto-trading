@@ -276,14 +276,16 @@ class CcxtExchangeHandler(ExchangeHandler):
         if min_price is None:
             min_price = 0
 
+        min_price = float(min_price)
+
         return {
-            'min_price': float(min_price),
+            'min_price': min_price,
             'max_price': float(market['limits']['price']['max']),
             'min_qty': float(market['limits']['amount']['min']),
             'max_qty': float(market['limits']['amount']['max']),
             'order_types': market['info']['orderTypes'],
             'oco_allowed': market['info']['ocoAllowed'],
-            'min_vs_currency': market['limits']['cost']['min'], # Minimum quantity of vs_currency
+            'min_vs_currency': min_price, # Minimum quantity of vs_currency
         }
 
     def get_candles_for_strategy(self, symbol, vs_currency, timeframe, num_candles,
