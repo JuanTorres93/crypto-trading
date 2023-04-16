@@ -271,16 +271,16 @@ class CcxtExchangeHandler(ExchangeHandler):
         cu.log(market)
         cu.log("END DEBUG")
 
-        min_price = float(market['limits']['cost']['min'])
+        min_price = market['limits']['cost']['min']
 
         if min_price is None:
-            min_price = float(market['cost']['min'])
+            min_price = market['cost']['min']
 
             if min_price is None:
                 min_price = 0
 
         return {
-            'min_price': min_price,
+            'min_price': float(min_price),
             'max_price': float(market['limits']['price']['max']),
             'min_qty': float(market['limits']['amount']['min']),
             'max_qty': float(market['limits']['amount']['max']),
