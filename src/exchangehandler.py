@@ -274,10 +274,7 @@ class CcxtExchangeHandler(ExchangeHandler):
         min_price = market['limits']['cost']['min']
 
         if min_price is None:
-            min_price = market['cost']['min']
-
-            if min_price is None:
-                min_price = 0
+            min_price = 0
 
         return {
             'min_price': float(min_price),
