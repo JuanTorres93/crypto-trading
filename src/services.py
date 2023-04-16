@@ -64,27 +64,31 @@ def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler,
         fee_factor = exchange_handler.get_fee_factor(symbol=symbol,
                                                      vs_currency=vs_currency)['taker']
 
-        # Fees are computed in the obtained asset
-        entry_fee = fee_factor * amount
-        # Amount actually bought
-        entry_amount = amount - entry_fee
-        # Actual vs_currency entry
-        vs_currency_entry = entry_amount * strategy_output.entry_price
         # Entry price
-        ep = strategy_output.entry_price
+        entry_price_in_symbol = strategy_output.entry_price
+        stop_loss_in_symbol = strategy_output.stop_loss
+        take_profit_in_symbol = strategy_output.take_profit
+
+        # Fees are computed in the obtained asset
+        entry_fee_in_symbol = fee_factor * amount
+        # Amount actually bought
+        entry_amount = amount - entry_fee_in_symbol
+        # Actual vs_currency entry
+        vs_currency_entry = amount * entry_price_in_symbol   # amount instead of entry_amount due to
+                                                   # fees taken by the broker
 
         if strategy_output.position_type == st.PositionType.LONG:
             # Total vs_currency on exit not considering fees
-            vs_currency_win_no_fees = entry_amount * strategy_output.take_profit
-            vs_currency_lose_no_fees = entry_amount * strategy_output.stop_loss
+            vs_currency_win_no_fees = entry_amount * take_profit_in_symbol
+            vs_currency_loss_no_fees = entry_amount * stop_loss_in_symbol
 
             # Possible exit fees in vs_currency
-            exit_fee_win = fee_factor * vs_currency_win_no_fees
-            exit_fee_lose = fee_factor * vs_currency_lose_no_fees
+            exit_fee_win_in_vs_currency = fee_factor * vs_currency_win_no_fees
+            exit_fee_loss_in_vs_currency = fee_factor * vs_currency_loss_no_fees
 
             # Expected total vs_currency on exit
-            vs_currency_win = vs_currency_win_no_fees - exit_fee_win
-            vs_currency_lose = vs_currency_lose_no_fees - exit_fee_lose
+            vs_currency_win = vs_currency_win_no_fees - exit_fee_win_in_vs_currency
+            vs_currency_lose = vs_currency_loss_no_fees - exit_fee_loss_in_vs_currency
 
             # Compare with initial state
             win_margin = abs(vs_currency_win - vs_currency_entry)
@@ -92,35 +96,33 @@ def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler,
 
             # Update strategy output
             if update_st_out_to_get_real_rrr:
+
+                # Theoretical means not taking fees into account
+                theoretical_win_margin_in_vs_currency = entry_amount * abs(take_profit_in_symbol - entry_price_in_symbol)
+                theoretical_loss_margin_in_vs_currency = entry_amount * abs(entry_price_in_symbol - stop_loss_in_symbol)
+                theoretical_rrr = theoretical_win_margin_in_vs_currency / theoretical_loss_margin_in_vs_currency
+
+                exit_fee_loss_in_symbol = exit_fee_loss_in_vs_currency / entry_amount
+                exit_fee_win_in_symbol = exit_fee_win_in_vs_currency / entry_amount
+
+                new_take_profit = entry_price_in_symbol + exit_fee_win_in_symbol + theoretical_rrr * abs(entry_price_in_symbol - stop_loss_in_symbol + exit_fee_loss_in_symbol)
+
                 cu.log("START DEBUG")
                 cu.log(f"Initial win margin {win_margin}")
                 cu.log(f"Initial loss margin {lose_margin}")
-
-                # Theoretical means not taking fees into account
-                theoretical_win_margin = abs(strategy_output.take_profit - strategy_output.entry_price)
-
-                cu.log(f"Theoretical win margin {theoretical_win_margin}")
-
-                theoretical_loss_margin = abs(strategy_output.entry_price - strategy_output.stop_loss)
-
-                cu.log(f"Theoretical loss margin {theoretical_loss_margin}")
-
-                theoretical_rrr = theoretical_win_margin / theoretical_loss_margin
-
-                cu.log(f"Entry price {ep}")
-                cu.log(f"Exit fee win {exit_fee_win}")
-                cu.log(f"Exit fee loss {exit_fee_lose}")
-                cu.log(f"Theoretical RRR {theoretical_rrr}")
-                cu.log(f"Stop loss {strategy_output.stop_loss}")
-
-                new_take_profit = ep + exit_fee_win + theoretical_rrr * abs(ep - strategy_output.stop_loss + exit_fee_lose)
-
+                cu.log(f"Theoretical win margin in {vs_currency}: {theoretical_win_margin_in_vs_currency}")
+                cu.log(f"Theoretical loss margin in {vs_currency}: {theoretical_loss_margin_in_vs_currency}")
+                cu.log(f"Entry price: {entry_price_in_symbol}")
+                cu.log(f"Exit fee win in {vs_currency}: {exit_fee_win_in_vs_currency}")
+                cu.log(f"Exit fee loss in {vs_currency}: {exit_fee_loss_in_vs_currency}")
+                cu.log(f"Theoretical RRR: {theoretical_rrr}")
+                cu.log(f"Stop loss {stop_loss_in_symbol}")
                 cu.log(f"New take profit {new_take_profit}")
                 cu.log("END DEBUG")
 
                 strategy_output.take_profit = new_take_profit
 
-                return 1 < (abs(new_take_profit - ep - exit_fee_win) / abs(ep - strategy_output.stop_loss - exit_fee_lose)) < 2.5
+                return 1 < (abs(new_take_profit - entry_price_in_symbol - exit_fee_win_in_symbol) / abs(entry_price_in_symbol - stop_loss_in_symbol - exit_fee_loss_in_symbol)) < 2.5
             else:
                 return win_margin / lose_margin > 1
 
