@@ -181,7 +181,7 @@ class CcxtExchangeHandler(ExchangeHandler):
                                                         type='market',
                                                         side='buy',
                                                         amount=amount)
-        except ccxt.errors.InvalidOrder as e:
+        except (ccxt.errors.InvalidOrder, ccxt.errors.InsufficientFunds) as e:
             # If it is not possible, do nothing more
             return None
 
