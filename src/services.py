@@ -226,6 +226,13 @@ def close_opened_position(symbol, vs_currency):
             sell_order = eh.sell_market_order_diminishing_amount(symbol=symbol,
                                                                  vs_currency=vs_currency,
                                                                  amount=amount)
+
+            if sell_order is None:
+                msg = f"Couldn't close {symbol}/{vs_currency} position"
+                cu.log(msg)
+                externalnotifier.externally_notify(msg)
+                return None
+
             crypto_quantity_exit = sell_order['amount']
             exit_price = sell_order['price']
             exit_fee_vs_currency = sell_order['fee_in_asset']

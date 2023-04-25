@@ -213,10 +213,13 @@ class CcxtExchangeHandler(ExchangeHandler):
                                            amount=amount)
 
         # Execute sell order
-        sell_order = self._exchange_api.create_order(symbol=market,
-                                                    type='market',
-                                                    side='sell',
-                                                    amount=amount)
+        try:
+            sell_order = self._exchange_api.create_order(symbol=market,
+                                                        type='market',
+                                                        side='sell',
+                                                        amount=amount)
+        except ccxt.errors.InvalidOrder as e:
+            return None
 
         try:
             fee_in_asset = sell_order['fee']['cost']
