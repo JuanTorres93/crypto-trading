@@ -299,7 +299,10 @@ def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
             market_info = eh.fetch_market(symbol=symbol, vs_currency=vs_currency)
             min_vs_currency_to_enter_market = market_info['min_vs_currency']
 
-            if vs_currency_entry > min_vs_currency_to_enter_market:
+            vs_currency_on_stop_loss = crypto_quantity_entry * stop_loss
+
+            # Check if both entry price and less favourable price are met
+            if (vs_currency_entry > min_vs_currency_to_enter_market) and (vs_currency_on_stop_loss > 1.01 * min_vs_currency_to_enter_market):
                 # Perform the strategy with actual money
                 cu.log(f"Trying to buy: {crypto_quantity_entry} {symbol} with {vs_currency_entry} {vs_currency}")
                 buy_order = eh.buy_market_order(symbol=symbol,
