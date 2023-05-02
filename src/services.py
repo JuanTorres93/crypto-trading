@@ -230,7 +230,7 @@ def close_opened_position(symbol, vs_currency):
             if sell_order is None:
                 msg = f"Couldn't close {symbol}/{vs_currency} position"
                 cu.log(msg)
-                externalnotifier.externally_notify(msg)
+                # externalnotifier.externally_notify(msg)
                 return None
 
             crypto_quantity_exit = sell_order['amount']
