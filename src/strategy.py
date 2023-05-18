@@ -250,5 +250,52 @@ class VolumeTradingStrategy(Strategy):
         return _no_entry_output()
 
     def strategy_name(self):
-        return "volume_trading_strategy_delete_this_when_finished_testing"
+        return "volume_trading_strategy"
+
+
+class VolumeEmaTradingStrategy(Strategy):
+    def perform_strategy(self, entry_price, **dfs):
+        """
+        The dataframe included needs to include the last candle of the plot (the not finished one)
+        :param entry_price:
+        :param dfs:
+        :return:
+        """
+        df = dfs['df']
+
+        # This is used just not to enter to an already lost position
+        current_candle_index = -1
+        # Index with which perform the analysis
+        last_finished_candle_index = -2
+
+        try:
+            # This is inside a try in case indicators cannot be computed due to a lack
+            # Of candles
+            green_volume_df = df['volume'][df['close'] > df['close'].shift(1)]
+            quantile = green_volume_df.quantile(.80)
+            ema = ind.get_ema(df=df, period=50)
+            atr_stop_loss = ind.get_atr_stop_loss(df)['low_band'].iloc[last_finished_candle_index]
+            stop_loss = atr_stop_loss
+
+        except Exception:
+            return _no_entry_output()
+
+        rrr = 1.5
+        take_profit = entry_price + rrr * abs(entry_price - stop_loss)
+
+        # Last finished candle is green
+        green_volume_candle = (len(df) - 1) in list(green_volume_df.index)
+        volume_higher_than_quantile = df['volume'].iloc[last_finished_candle_index] >= quantile
+        price_above_ema = df['close'].iloc[last_finished_candle_index] > ema.iloc[last_finished_candle_index]
+
+        if green_volume_candle and volume_higher_than_quantile and price_above_ema and df.iloc[current_candle_index]['low'] > stop_loss:
+            return StrategyOutput(can_enter=True, take_profit=take_profit,
+                                  stop_loss=stop_loss,
+                                  entry_price=entry_price,
+                                  position_type=PositionType.LONG)
+
+        return _no_entry_output()
+
+    def strategy_name(self):
+        return "volume_ema_trading_strategy"
 

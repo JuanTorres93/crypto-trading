@@ -649,7 +649,7 @@ def run_bot(simulate):
     markets = initialize_markets()
 
     # CHANGE STRATEGY HERE
-    strat = st.VolumeTradingStrategy()
+    strat = st.VolumeEmaTradingStrategy()
 
     cu.log("Starting main loop")
     while True:
@@ -701,4 +701,5 @@ if __name__ == "__main__":
             cu.log_traceback()
             externalnotifier.externally_notify("El bot ha parado debido a una excepción")
             raise Exception("Bot stopped")
+
 
