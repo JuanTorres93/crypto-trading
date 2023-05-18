@@ -697,6 +697,13 @@ if __name__ == "__main__":
             externalnotifier.externally_notify(msg)
             cu.log(msg)
             time.sleep(time_to_wait_in_seconds)
+        except ccxt.errors.AuthenticationError:
+            time_to_wait_in_seconds = 3600
+            msg = f"Authentication error. Check validity of API key or the IP " \
+                  f"from which can be accessed from provider. Waiting {time_to_wait_in_seconds} seconds."
+            externalnotifier.externally_notify(msg)
+            cu.log(msg)
+            time.sleep(time_to_wait_in_seconds)
         except Exception:
             cu.log_traceback()
             externalnotifier.externally_notify("El bot ha parado debido a una excepción")
