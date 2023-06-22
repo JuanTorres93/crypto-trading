@@ -1,9 +1,8 @@
 SELECT
 	   status as "Result",
 	   count(status) as "Count",
-	   sum(vs_currency_result_no_fees) as "NO Commissions" ,
-	   sum(vs_currency_result_no_fees) - sum(entry_fee_vs_currency) - sum(exit_fee_vs_currency) as "WITH Commissions"
-FROM trade
+	   sum("trade result")
+FROM control_view
 WHERE
 strategy_name LIKE "volume_ema_trading_strategy"
 AND is_real IS TRUE
@@ -13,9 +12,8 @@ UNION ALL
 SELECT
 	"TOTAL",
 	count(status) as "Count",
-	sum(vs_currency_result_no_fees) as "NO Commissions",
-	sum(vs_currency_result_no_fees) - sum(entry_fee_vs_currency) - sum(exit_fee_vs_currency) as "WITH Commissions"
-FROM trade
+	sum("trade result")
+FROM control_view
 WHERE 
 strategy_name LIKE "volume_ema_trading_strategy"
 AND is_real IS TRUE

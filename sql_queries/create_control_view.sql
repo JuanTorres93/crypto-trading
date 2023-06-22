@@ -1,4 +1,4 @@
-CREATE VIEW IF NOT EXISTS control_view AS
+CREATE VIEW IF NOT EXISTS control_viewss AS
     SELECT
 		id,
 		symbol as "sym",
@@ -18,6 +18,8 @@ CREATE VIEW IF NOT EXISTS control_view AS
 		100 * abs(entry_price - stop_loss) / entry_price AS "risked percentage",
 		abs(take_profit - entry_price) / abs(entry_price - stop_loss) AS "RRR NO com",
 		(COALESCE(crypto_quantity_exit, crypto_quantity_entry) * (take_profit - entry_price) - entry_fee_vs_currency - exit_fee_vs_currency) / -(COALESCE(crypto_quantity_exit, crypto_quantity_entry) * (stop_loss - entry_price) - entry_fee_vs_currency - exit_fee_vs_currency) AS "RRR COM",
-		COALESCE(crypto_quantity_exit, crypto_quantity_entry) * entry_price AS "money on entry"
+		COALESCE(crypto_quantity_exit, crypto_quantity_entry) * entry_price AS "money on entry",
+		strategy_name,
+		is_real
 	FROM trade
 	ORDER BY id DESC
