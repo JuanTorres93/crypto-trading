@@ -74,8 +74,8 @@ def position_can_be_profitable(exchange_handler: ex_han.ExchangeHandler,
         # Amount actually bought
         entry_amount = amount - entry_fee_in_symbol
         # Actual vs_currency entry
-        vs_currency_entry = amount * entry_price_in_symbol   # amount instead of entry_amount due to
-                                                   # fees taken by the broker
+        vs_currency_entry = amount * entry_price_in_symbol  # amount instead of entry_amount due to
+                                                            # fees taken by the broker
 
         if strategy_output.position_type == st.PositionType.LONG:
             # Total vs_currency on exit not considering fees
@@ -197,7 +197,6 @@ def close_opened_position(symbol, vs_currency):
                                                            num_candles=1)['high'])[0]
 
         if current_high >= take_profit:
-            # TODO idea: no vender, sino aumentar take profit y luego ir comprobando
             exit_price = take_profit
         elif current_low <= stop_loss:
             exit_price = stop_loss
@@ -251,7 +250,6 @@ def close_opened_position(symbol, vs_currency):
                                                    status=status)
         repo.commit()
         cu.log(f"{model.format_date_for_database(datetime.now())} closed position for {symbol}")
-        # update_max_vs_currency_to_use()
 
 
 def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
@@ -302,7 +300,9 @@ def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
             vs_currency_on_stop_loss = crypto_quantity_entry * stop_loss
 
             # Check if both entry price and less favourable price are met
-            if (vs_currency_entry > min_vs_currency_to_enter_market) and (vs_currency_on_stop_loss > 1.01 * min_vs_currency_to_enter_market):
+            # Money on stop loss must be at least 10% higher than the minimum required. This is done to mitigate the
+            # possibilities of getting stuck in the trade due to a prevention of selling.
+            if (vs_currency_entry > min_vs_currency_to_enter_market) and (vs_currency_on_stop_loss > 1.10 * min_vs_currency_to_enter_market):
                 # Perform the strategy with actual money
                 cu.log(f"Trying to buy: {crypto_quantity_entry} {symbol} with {vs_currency_entry} {vs_currency}")
                 buy_order = eh.buy_market_order(symbol=symbol,
@@ -313,7 +313,6 @@ def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
                     # Log that order could not be placed and go on searching for trades
                     cu.log("Couldn't perform the buy order")
                     return
-
 
                 vs_currency_entry = buy_order['cost']
                 crypto_quantity_entry = buy_order['amount']
@@ -621,19 +620,28 @@ def initialize_markets():
     return markets
 
 
-def update_max_vs_currency_to_use():
+def _update_max_vs_currency_to_use():
     """
     Modifies config.MAX_VS_CURRENCY_TO_USE in order to always be able to have
     7 trades at a time. The minimum value will always be 13 due to the minimum
     required by Binance of 10 euros.
     :return:
     """
+    previous_max_vs_currency_to_use = config.MAX_VS_CURRENCY_TO_USE
     total_eur = eh.get_total_amount_in_symbol(symbol='EUR')
     new_max_vs_currency_to_use = total_eur / 7.2 # Can be 7 trades simultaneously. Decimals to take fees into account
 
     new_max_vs_currency_to_use = new_max_vs_currency_to_use if new_max_vs_currency_to_use > 13 else 13 # Minimun of 13 euros due to binance minimum of 10
 
     config.MAX_VS_CURRENCY_TO_USE = new_max_vs_currency_to_use
+    externalnotifier.externally_notify(f"MAX_VS_CURRENCY_TO_USE actualizado. Valor previo = {previous_max_vs_currency_to_use}. "
+                                       f"Valor nuevo = {new_max_vs_currency_to_use}")
+
+
+def monthly_update_max_vs_currency_to_use():
+    today = datetime.today()
+    if today.day == 1:
+        _update_max_vs_currency_to_use()
 
 
 def run_bot(simulate):
@@ -685,6 +693,9 @@ if __name__ == "__main__":
 
     # Weekly notifications oƒ current month results
     schedule.every().monday.at("08:30").do(notify_results_for_current_month)
+
+    # Monthly update of config.MAX_VS_CURRENCY_TO_USE
+    schedule.every().day.at("00:05").do(monthly_update_max_vs_currency_to_use)
 
     schedule.every().week.do(initialize_markets)
 
