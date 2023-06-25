@@ -641,6 +641,8 @@ def _update_max_vs_currency_to_use():
 def monthly_update_max_vs_currency_to_use():
     today = datetime.today()
     if today.day == 1:
+        msg_money_start_month = f"Euros al inicio del mes: {eh.get_total_amount_in_symbol(symbol='EUR')} €"
+        externalnotifier.externally_notify(msg_money_start_month)
         _update_max_vs_currency_to_use()
 
 
