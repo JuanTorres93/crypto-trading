@@ -405,7 +405,9 @@ class CcxtExchangeHandler(ExchangeHandler):
             non_zero_balances.pop(sym)
 
         for sym, val in non_zero_balances.items():
-            symbol_balance += useful_tickers[f'{sym}/{symbol}']['last'] * val
+            last_pair_price = useful_tickers[f'{sym}/{symbol}']['last']
+            if last_pair_price is not None:
+                symbol_balance += last_pair_price * val
 
         return symbol_balance
 
