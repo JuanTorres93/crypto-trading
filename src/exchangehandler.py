@@ -270,7 +270,6 @@ class CcxtExchangeHandler(ExchangeHandler):
             market = self._exchange_api.market(symbol=market_symbol)
 
         min_price = market['limits']['cost']['min']
-        max_price = float(market['limits']['price']['max']) # ¿Price o cost?
 
         if min_price is None:
             min_price = 0
@@ -279,13 +278,13 @@ class CcxtExchangeHandler(ExchangeHandler):
 
         return {
             'min_price': min_price,
-            'max_price': max_price,
+            'max_price': float(market['limits']['price']['max']),
             'min_qty': float(market['limits']['amount']['min']),
             'max_qty': float(market['limits']['amount']['max']),
             'order_types': market['info']['orderTypes'],
             'oco_allowed': market['info']['ocoAllowed'],
             'min_vs_currency': min_price, # Minimum quantity of vs_currency
-            'max_vs_currency': max_price, # Max quantity of vs_currency
+            'max_vs_currency': float(market['limits']['cost']['max']), # Max quantity of vs_currency
         }
 
     def get_candles_for_strategy(self, symbol, vs_currency, timeframe, num_candles,
