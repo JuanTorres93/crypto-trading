@@ -293,16 +293,27 @@ def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
                                                    datetime.now()))
             cu.log(f"Entered simulated position for {symbol}{vs_currency}")
         else:
-            # Check if bought quantity would be enough
+            # Check if used vs currency would be between min and max ranges
             market_info = eh.fetch_market(symbol=symbol, vs_currency=vs_currency)
             min_vs_currency_to_enter_market = market_info['min_vs_currency']
+            max_vs_currency_to_enter_market = market_info['max_vs_currency']
 
             vs_currency_on_stop_loss = crypto_quantity_entry * stop_loss
+            vs_currency_on_take_profit = crypto_quantity_entry * take_profit
+
+            safety_margin_per_one = .05  # Used to compare vs_currency range to stop loss and take profit
+
+            vs_currency_below_max = vs_currency_entry < max_vs_currency_to_enter_market and vs_currency_on_take_profit < ((1 - safety_margin_per_one) * max_vs_currency_to_enter_market)
+            if not vs_currency_below_max:
+                externalnotifier.externally_notify(f"Se ha intentado comprar {symbol}, pero {vs_currency} supera el valor máximo. Implementar comportamiento.")
+
+            vs_currency_above_min = vs_currency_entry > min_vs_currency_to_enter_market and vs_currency_on_stop_loss > ((1 + safety_margin_per_one) * min_vs_currency_to_enter_market)
 
             # Check if both entry price and less favourable price are met
-            # Money on stop loss must be at least 10% higher than the minimum required. This is done to mitigate the
-            # possibilities of getting stuck in the trade due to a prevention of selling.
-            if (vs_currency_entry > min_vs_currency_to_enter_market) and (vs_currency_on_stop_loss > 1.10 * min_vs_currency_to_enter_market):
+            # Money on stop loss must be at least safety_margin_per_one higher than the minimum required. This is done
+            # to mitigate the possibilities of getting stuck in the trade due to a prevention of selling. The same
+            # applies to take profit, but must be lower instead of higher
+            if vs_currency_above_min and vs_currency_below_max:
                 # Perform the strategy with actual money
                 cu.log(f"Trying to buy: {crypto_quantity_entry} {symbol} with {vs_currency_entry} {vs_currency}")
                 buy_order = eh.buy_market_order(symbol=symbol,
