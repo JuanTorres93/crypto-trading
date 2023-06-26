@@ -2,6 +2,8 @@ import logging
 import os
 import traceback
 
+from requests import get
+
 import filesystemutils
 
 log_file_path = os.path.join(filesystemutils.home_directory(True), "botlog.log")
@@ -60,3 +62,7 @@ def log_traceback():
     tb = traceback.format_exc()
     logger.error(tb)
 
+
+def get_public_ip():
+    ip = get('https://api.ipify.org').content.decode('utf8')
+    return ip

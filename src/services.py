@@ -711,9 +711,23 @@ if __name__ == "__main__":
             cu.log(msg)
             time.sleep(time_to_wait_in_seconds)
         except ccxt.errors.AuthenticationError:
-            time_to_wait_in_seconds = 3600
-            msg = f"Authentication error. Check validity of API key or the IP " \
-                  f"from which can be accessed from provider. Waiting {time_to_wait_in_seconds} seconds."
+            time_to_wait_in_seconds = 10 * 60
+            public_ip = ""
+            try:
+                public_ip = cu.get_public_ip()
+            except Exception as e:
+                externalnotifier.externally_notify(f"Excepción al intentar obtener la ip pública: {e}")
+
+            msg = f"Error de autenticación. Comprueba la validez de la clave de API o la IP" \
+                  f"desde la que se puede acceder." \
+                  f"Intenta incluir en la lista blanca la IP pública {public_ip}." \
+                  f"https://www.binance.com/es/my/settings/api-management" \
+                  f"Esperando {time_to_wait_in_seconds} segundos."
+            # msg = f"Authentication error. Check validity of API key or the IP " \
+            #       f"from which can be accessed from provider. " \
+            #       f"Try including the public IP {public_ip} in the whitelist." \
+            #       f"https://www.binance.com/es/my/settings/api-management" \
+            #       f"Waiting {time_to_wait_in_seconds} seconds."
             externalnotifier.externally_notify(msg)
             cu.log(msg)
             time.sleep(time_to_wait_in_seconds)
