@@ -1,4 +1,4 @@
-CREATE VIEW IF NOT EXISTS control_viewss AS
+CREATE VIEW IF NOT EXISTS control_view AS
     SELECT
 		id,
 		symbol as "sym",
