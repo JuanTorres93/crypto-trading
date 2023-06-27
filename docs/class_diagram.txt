@@ -101,6 +101,7 @@ classDiagram
     +get_free_balance(symbol)
     +get_current_price(symbol, vs_currency)
     +get_total_amount_in_symbol(symbol)
+    +withdraw_fiat_to_bank_account(fiat_symbol, fiat_quantity, swift)
     -_sell_market_order(symbol, vs_currency, amount)
     -_market_from_symbol_and_vs_currency(symbol, vs_currency)
   }

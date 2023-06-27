@@ -133,6 +133,16 @@ class ExchangeHandler(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def withdraw_fiat_to_bank_account(self, fiat_symbol, fiat_quantity, swift):
+        """
+        Withdraws fiat to bank account
+        :param fiat_symbol: name of fiat coin to withdraw: EUR, USD, etc.
+        :param fiat_quantity: quantity of fiat to withdraw
+        :param swift: Swift code of the bank
+        """
+        raise NotImplementedError
+
 
 class CcxtExchangeHandler(ExchangeHandler):
     """
@@ -407,6 +417,9 @@ class CcxtExchangeHandler(ExchangeHandler):
 
         return symbol_balance
 
+    def withdraw_fiat_to_bank_account(self, fiat_symbol, fiat_quantity, swift):
+        self._exchange_api.withdraw(code=fiat_symbol, amount=fiat_quantity, address='wallet')
+
 
 class BinanceCcxtExchangeHandler(CcxtExchangeHandler):
     pass
@@ -421,7 +434,8 @@ if __name__ == '__main__':
             'enableLimitRate': True,
         }
     ))
-    borrar = bin_eh.get_total_amount_in_symbol('EUR')
-    print(borrar)
+
+    bin_eh.withdraw_fiat_to_bank_account('EUR', 1, 'swiftcode')
+
 
 
