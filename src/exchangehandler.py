@@ -7,6 +7,9 @@ import pandas as pd
 import commonutils as cu
 
 
+MAX_VS_CURRENCY_WHEN_NONE = 10000   # Max amount of vs_currency to use when
+                                    # not specified by exchange
+
 class ExchangeHandler(ABC):
     def __init__(self, exchange_api):
         self._exchange_api = exchange_api
@@ -286,6 +289,12 @@ class CcxtExchangeHandler(ExchangeHandler):
 
         min_price = float(min_price)
 
+        max_vs_currency = market['limits']['cost']['max']
+        if max_vs_currency is None:
+            max_vs_currency = MAX_VS_CURRENCY_WHEN_NONE
+
+        max_vs_currency = float(max_vs_currency)
+
         return {
             'min_price': min_price,
             'max_price': float(market['limits']['price']['max']),
@@ -294,7 +303,7 @@ class CcxtExchangeHandler(ExchangeHandler):
             'order_types': market['info']['orderTypes'],
             'oco_allowed': market['info']['ocoAllowed'],
             'min_vs_currency': min_price, # Minimum quantity of vs_currency
-            'max_vs_currency': float(market['limits']['cost']['max']), # Max quantity of vs_currency
+            'max_vs_currency': max_vs_currency, # Max quantity of vs_currency
         }
 
     def get_candles_for_strategy(self, symbol, vs_currency, timeframe, num_candles,
