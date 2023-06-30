@@ -713,6 +713,7 @@ if __name__ == "__main__":
     schedule.every().week.do(initialize_markets)
 
     # Update maximum vs currency to enter a trade
+    reload_exchange_handler()
     _update_max_vs_currency_to_use()
 
     while True:
