@@ -692,25 +692,28 @@ def run_bot(simulate):
 
 if __name__ == "__main__":
     # Daily notification of current day status
-    schedule.every().day.at("12:00").do(notify_results_for_current_day)
-    schedule.every().day.at("16:00").do(notify_results_for_current_day)
-    schedule.every().day.at("20:00").do(notify_results_for_current_day)
+    # schedule.every().day.at("12:00").do(notify_results_for_current_day)
+    # schedule.every().day.at("16:00").do(notify_results_for_current_day)
+    # schedule.every().day.at("20:00").do(notify_results_for_current_day)
 
     # Remove log file every day in order not to saturate memory
     schedule.every().day.at("00:00").do(cu.initialize_log_file)
 
     # Notification of previous day results
-    schedule.every().day.at("08:00").do(notify_results_for_previous_day)
+    schedule.every().day.at("01:00").do(notify_results_for_previous_day)
     # Notification of previous month results
-    schedule.every().day.at("09:00").do(notify_results_for_previous_month)
+    schedule.every().day.at("01:02").do(notify_results_for_previous_month)
 
     # Weekly notifications oƒ current month results
-    schedule.every().monday.at("08:30").do(notify_results_for_current_month)
+    schedule.every().monday.at("01:01").do(notify_results_for_current_month)
 
     # Monthly update of config.MAX_VS_CURRENCY_TO_USE
-    schedule.every().day.at("00:05").do(monthly_update_max_vs_currency_to_use)
+    schedule.every().day.at("00:01").do(monthly_update_max_vs_currency_to_use)
 
     schedule.every().week.do(initialize_markets)
+
+    # Update maximum vs currency to enter a trade
+    _update_max_vs_currency_to_use()
 
     while True:
         try:
@@ -729,22 +732,18 @@ if __name__ == "__main__":
             except Exception as e:
                 externalnotifier.externally_notify(f"Excepción al intentar obtener la ip pública: {e}")
 
-            msg = f"Error de autenticación. Comprueba la validez de la clave de API o la IP" \
-                  f"desde la que se puede acceder." \
-                  f"Intenta incluir en la lista blanca la IP pública {public_ip}." \
-                  f"https://www.binance.com/es/my/settings/api-management" \
+            msg = f"Error de autenticación. Comprueba la validez de la clave de API o la IP " \
+                  f"desde la que se puede acceder. " \
+                  f"Intenta incluir en la lista blanca la IP pública {public_ip} " \
+                  f"https://www.binance.com/es/my/settings/api-management. " \
                   f"Esperando {time_to_wait_in_seconds} segundos."
-            # msg = f"Authentication error. Check validity of API key or the IP " \
-            #       f"from which can be accessed from provider. " \
-            #       f"Try including the public IP {public_ip} in the whitelist." \
-            #       f"https://www.binance.com/es/my/settings/api-management" \
-            #       f"Waiting {time_to_wait_in_seconds} seconds."
+
             externalnotifier.externally_notify(msg)
             cu.log(msg)
             time.sleep(time_to_wait_in_seconds)
-        except Exception:
+        except Exception as e:
             cu.log_traceback()
-            externalnotifier.externally_notify("El bot ha parado debido a una excepción")
+            externalnotifier.externally_notify(f"El bot ha parado debido a la excepción: {e}")
             raise Exception("Bot stopped")
 
 
