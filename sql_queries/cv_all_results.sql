@@ -6,7 +6,7 @@ FROM control_view
 WHERE
 strategy_name LIKE "volume_ema_trading_strategy"
 AND is_real IS TRUE
---AND exit_date LIKE '%/06/2023 %:%:%'	-- CAMBIAR ABAJO TAMBIÉN 'DD/MM/YYYY %:%:%'
+--AND exit_date LIKE '%/07/2023 %:%:%'	-- CAMBIAR ABAJO TAMBIÉN 'DD/MM/YYYY %:%:%'
 GROUP BY status
 UNION ALL
 SELECT
@@ -17,5 +17,5 @@ FROM control_view
 WHERE 
 strategy_name LIKE "volume_ema_trading_strategy"
 AND is_real IS TRUE
---AND exit_date LIKE '%/06/2023 %:%:%'	-- CAMBIAR ARRIBA TAMBIÉN 'DD/MM/YYYY %:%:%'
+--AND exit_date LIKE '%/07/2023 %:%:%'	-- CAMBIAR ARRIBA TAMBIÉN 'DD/MM/YYYY %:%:%'
 ;
