@@ -301,13 +301,14 @@ def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
             vs_currency_on_stop_loss = crypto_quantity_entry * stop_loss
             vs_currency_on_take_profit = crypto_quantity_entry * take_profit
 
-            safety_margin_per_one = .05  # Used to compare vs_currency range to stop loss and take profit
+            safety_margin_per_one_take_profit = .05  # Used to compare vs_currency range to  take profit
+            safety_margin_per_one_stop_loss = .3  # Used to compare vs_currency range to stop loss
 
-            vs_currency_below_max = vs_currency_entry < max_vs_currency_to_enter_market and vs_currency_on_take_profit < ((1 - safety_margin_per_one) * max_vs_currency_to_enter_market)
+            vs_currency_below_max = vs_currency_entry < max_vs_currency_to_enter_market and vs_currency_on_take_profit < ((1 - safety_margin_per_one_take_profit) * max_vs_currency_to_enter_market)
             if not vs_currency_below_max:
                 externalnotifier.externally_notify(f"Se ha intentado comprar {symbol}, pero {vs_currency} supera el valor máximo. Implementar comportamiento.")
 
-            vs_currency_above_min = vs_currency_entry > min_vs_currency_to_enter_market and vs_currency_on_stop_loss > ((1 + safety_margin_per_one) * min_vs_currency_to_enter_market)
+            vs_currency_above_min = vs_currency_entry > min_vs_currency_to_enter_market and vs_currency_on_stop_loss > ((1 + safety_margin_per_one_stop_loss) * min_vs_currency_to_enter_market)
 
             # Check if both entry price and less favourable price are met
             # Money on stop loss must be at least safety_margin_per_one higher than the minimum required. This is done
