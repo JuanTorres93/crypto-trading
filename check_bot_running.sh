@@ -1,5 +1,6 @@
 #!/bin/bash
-# The execution of this file is intented to be handled by cronie or similar
+# The execution of this file is intented to be handled by cronie or similar with the following config (path to this file):
+# */1 * * * * ~/crypto-trading/check_bot_running.sh
 
 folder="$HOME/logs_bot_failed"
 
