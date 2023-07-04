@@ -47,7 +47,7 @@ def initialize_log_file():
 
 
 # Initialize the log file and its logger
-initialize_log_file()
+# initialize_log_file()
 
 
 def log(msg):

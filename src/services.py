@@ -692,6 +692,8 @@ def run_bot(simulate):
 
 
 if __name__ == "__main__":
+    cu.initialize_log_file()
+
     # Daily notification of current day status
     # schedule.every().day.at("12:00").do(notify_results_for_current_day)
     # schedule.every().day.at("16:00").do(notify_results_for_current_day)
