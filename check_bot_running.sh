@@ -13,7 +13,7 @@ check_and_create_folder() {
 if [[ ! $(pgrep -f "python services.py") ]]
 then
     check_and_create_folder
-    mv "$HOME/botlog.log" "$folder/botlog - $(date)"
+    mv "$HOME/botlog.log" "$folder/botlog - $(date '+%Y-%m-%d_%H:%M:%S')"
     cd ~/crypto-trading/ && source venv/bin/activate && cd src/
     python -c "import externalnotifier as en; en.externally_notify('El bot se ha parado. Se ha guardado el log y se va a intentar lanzarlo otra vez.')"
     python services.py &
