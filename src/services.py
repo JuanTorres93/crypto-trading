@@ -650,6 +650,25 @@ def _update_max_vs_currency_to_use():
                                        f"Valor nuevo = {new_max_vs_currency_to_use}")
 
 
+def _notify_authentication_error():
+    wait_seconds = 10 * 60
+    public_ip = ""
+    try:
+        public_ip = cu.get_public_ip()
+    except Exception as e:
+        externalnotifier.externally_notify(f"Excepción al intentar obtener la ip pública: {e}")
+
+    msg = f"Error de autenticación. Comprueba la validez de la clave de API o la IP " \
+          f"desde la que se puede acceder. " \
+          f"Intenta incluir en la lista blanca la IP pública {public_ip} " \
+          f"https://www.binance.com/es/my/settings/api-management. " \
+          f"Esperando {wait_seconds} segundos."
+
+    externalnotifier.externally_notify(msg)
+    cu.log(msg)
+    time.sleep(wait_seconds)
+
+
 def monthly_update_max_vs_currency_to_use():
     today = datetime.today()
     if today.day == 1:
@@ -716,8 +735,11 @@ if __name__ == "__main__":
     schedule.every().week.do(initialize_markets)
 
     # Update maximum vs currency to enter a trade
-    reload_exchange_handler()
-    _update_max_vs_currency_to_use()
+    try:
+        reload_exchange_handler()
+        _update_max_vs_currency_to_use()
+    except ccxt.errors.AuthenticationError:
+        _notify_authentication_error()
 
     while True:
         try:
@@ -729,22 +751,7 @@ if __name__ == "__main__":
             cu.log(msg)
             time.sleep(time_to_wait_in_seconds)
         except ccxt.errors.AuthenticationError:
-            time_to_wait_in_seconds = 10 * 60
-            public_ip = ""
-            try:
-                public_ip = cu.get_public_ip()
-            except Exception as e:
-                externalnotifier.externally_notify(f"Excepción al intentar obtener la ip pública: {e}")
-
-            msg = f"Error de autenticación. Comprueba la validez de la clave de API o la IP " \
-                  f"desde la que se puede acceder. " \
-                  f"Intenta incluir en la lista blanca la IP pública {public_ip} " \
-                  f"https://www.binance.com/es/my/settings/api-management. " \
-                  f"Esperando {time_to_wait_in_seconds} segundos."
-
-            externalnotifier.externally_notify(msg)
-            cu.log(msg)
-            time.sleep(time_to_wait_in_seconds)
+            _notify_authentication_error()
         except Exception as e:
             cu.log_traceback()
             externalnotifier.externally_notify(f"El bot ha parado debido a la excepción: {e}")
