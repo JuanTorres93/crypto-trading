@@ -196,8 +196,14 @@ def close_opened_position(symbol, vs_currency):
                                                            timeframe='1m',
                                                            num_candles=1)['high'])[0]
 
+        # This is used to sell if the price is foreseen to go below the minimum
+        market_info = eh.fetch_market(symbol=symbol, vs_currency=vs_currency)
+        min_vs_currency_to_enter_market = market_info['min_vs_currency']
+
         if current_high >= take_profit:
             exit_price = take_profit
+        elif min_vs_currency_to_enter_market <= current_low <= min_vs_currency_to_enter_market * 1.004:
+            exit_price = current_low
         elif current_low <= stop_loss:
             exit_price = stop_loss
         else:
@@ -302,11 +308,12 @@ def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
             vs_currency_on_take_profit = crypto_quantity_entry * take_profit
 
             safety_margin_per_one_take_profit = .05  # Used to compare vs_currency range to  take profit
-            safety_margin_per_one_stop_loss = .3  # Used to compare vs_currency range to stop loss
+            safety_margin_per_one_stop_loss = .4  # Used to compare vs_currency range to stop loss
 
             vs_currency_below_max = vs_currency_entry < max_vs_currency_to_enter_market and vs_currency_on_take_profit < ((1 - safety_margin_per_one_take_profit) * max_vs_currency_to_enter_market)
             if not vs_currency_below_max:
                 externalnotifier.externally_notify(f"Se ha intentado comprar {symbol}, pero {vs_currency} supera el valor máximo. Implementar comportamiento.")
+                return
 
             vs_currency_above_min = vs_currency_entry > min_vs_currency_to_enter_market and vs_currency_on_stop_loss > ((1 + safety_margin_per_one_stop_loss) * min_vs_currency_to_enter_market)
 

@@ -444,7 +444,7 @@ if __name__ == '__main__':
         }
     ))
 
-    bin_eh.withdraw_fiat_to_bank_account('EUR', 1, 'swiftcode')
+    bin_eh.fetch_market('AVAX', 'EUR')
 
 
 

@@ -7,5 +7,7 @@ pycoingecko
 requests
 schedule
 scipy
+selenium
 SQLAlchemy
 ta
+webdriver-manager

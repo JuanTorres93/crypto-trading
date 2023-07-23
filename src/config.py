@@ -1,5 +1,7 @@
-BINANCE_API_KEY = 'binance_api_key'
-BINANCE_SECRET_KEY = 'binance_secret_key'
+BINANCE_API_KEY = ''
+BINANCE_SECRET_KEY = ''
+BINANCE_USER = ''
+BINANCE_PASS = ''
 
 TELEGRAM_BOT_TOKEN = ""
 TELEGRAM_BOT_CHAT_ID = ""
