@@ -339,6 +339,9 @@ def enter_position(symbol, vs_currency, timeframe, stop_loss, entry_price,
                 entry_fee_vs_currency = entry_price * buy_order['fee_in_asset']
                 entry_order_exchange_id = 'exchange_id'
 
+                if stop_loss <= min_vs_currency_to_enter_market:
+                    stop_loss = min_vs_currency_to_enter_market * 1.006
+
                 trade = model.create_initial_trade(symbol=symbol,
                                                    vs_currency_symbol=vs_currency,
                                                    timeframe=timeframe,
