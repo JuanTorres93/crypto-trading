@@ -4,6 +4,7 @@ import ccxt
 import numpy as np
 import pandas as pd
 
+import config
 import commonutils as cu
 
 
@@ -379,7 +380,7 @@ class CcxtExchangeHandler(ExchangeHandler):
 
         return list(close)[0]
 
-    def get_total_amount_in_symbol(self, symbol='EUR'):
+    def get_total_amount_in_symbol(self, symbol=config.VS_CURRENCY):
         """
         See description in parent class
         This method is susceptible to not work with other symbols
@@ -444,7 +445,7 @@ if __name__ == '__main__':
         }
     ))
 
-    bin_eh.fetch_market('AVAX', 'EUR')
+    bin_eh.fetch_market('AVAX', config.VS_CURRENCY)
 
 
 

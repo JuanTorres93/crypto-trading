@@ -623,7 +623,7 @@ def initialize_markets():
     cu.log("Initializing markets")
     while len(markets) == 0:
         markets = mf.get_pairs_for_exchange_vs_currency(exchange_id='binance',
-                                                        vs_currency='EUR',
+                                                        vs_currency=config.VS_CURRENCY,
                                                         force=True)
 
         markets = list(map(
@@ -650,8 +650,8 @@ def _update_max_vs_currency_to_use():
     :return:
     """
     previous_max_vs_currency_to_use = config.MAX_VS_CURRENCY_TO_USE
-    total_eur = eh.get_total_amount_in_symbol(symbol='EUR')
-    new_max_vs_currency_to_use = total_eur / 7.2 # Can be 7 trades simultaneously. Decimals to take fees into account
+    total_in_vs_currency = eh.get_total_amount_in_symbol(symbol=config.VS_CURRENCY)
+    new_max_vs_currency_to_use = total_in_vs_currency / 7.2 # Can be 7 trades simultaneously. Decimals to take fees into account
 
     new_max_vs_currency_to_use = new_max_vs_currency_to_use if new_max_vs_currency_to_use > 13 else 13 # Minimun of 13 euros due to binance minimum of 10
 
@@ -682,7 +682,7 @@ def _notify_authentication_error():
 def monthly_update_max_vs_currency_to_use():
     today = datetime.today()
     if today.day == 1:
-        msg_money_start_month = f"Euros al inicio del mes: {eh.get_total_amount_in_symbol(symbol='EUR')} €"
+        msg_money_start_month = f"{config.VS_CURRENCY} al inicio del mes: {eh.get_total_amount_in_symbol(symbol=config.VS_CURRENCY)} €"
         externalnotifier.externally_notify(msg_money_start_month)
         _update_max_vs_currency_to_use()
 
